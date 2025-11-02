@@ -67,12 +67,12 @@
             </androidx.cardview.widget.CardView>
 
             <androidx.cardview.widget.CardView
-                android:id="@+id/flights_card"
+                android:id="@+id/map_card"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_columnWeight="1"
                 android:layout_margin="4dp"
-                app:cardBackgroundColor="#E8E0FF"
+                app:cardBackgroundColor="#E6F4E6"
                 app:cardCornerRadius="16dp">
 
                 <TextView
@@ -80,7 +80,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:padding="16dp"
-                    android:text="Vé máy bay"
+                    android:text="Bản đồ"
                     android:textColor="@android:color/black" />
             </androidx.cardview.widget.CardView>
 
@@ -171,14 +171,6 @@
                     android:text="Khuyến mại"
                     android:textSize="11sp" />
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:drawableTop="@android:drawable/ic_menu_manage"
-                    android:gravity="center"
-                    android:text="Thuê xe"
-                    android:textSize="11sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
