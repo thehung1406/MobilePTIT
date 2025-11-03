@@ -47,9 +47,12 @@
         android:id="@+id/favoritesFragment"
         android:name="com.example.btl.ui.placeholder.PlaceholderFragment"
         android:label="Yêu thích" />
+
+    <!-- ProfileFragment -->
     <fragment
         android:id="@+id/moreFragment"
-        android:name="com.example.btl.ui.placeholder.PlaceholderFragment"
-        android:label="Thêm" />
+        android:name="com.example.btl.ui.profile.ProfileFragment"
+        android:label="Hồ sơ"
+        tools:layout="@layout/fragment_profile" />
 
 </navigation>

@@ -78,4 +78,12 @@
         android:textColor="@android:color/white"
         android:textSize="18sp"/>
 
+    <TextView
+        android:id="@+id/login_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Đã có tài khoản? Đăng nhập ngay"
+        android:layout_marginTop="16dp"
+        android:gravity="center"/>
+
 </LinearLayout>
