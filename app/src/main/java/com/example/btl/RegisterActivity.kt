@@ -24,6 +24,10 @@ class RegisterActivity : AppCompatActivity() {
         binding.registerButton.setOnClickListener {
             validateData()
         }
+
+        binding.loginTextview.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
     }
 
     private fun showDatePickerDialog() {
