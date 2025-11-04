@@ -6,4 +6,8 @@
     </style>
 
     <style name="Theme.BTL" parent="Base.Theme.BTL" />
+
+    <style name="RoundedCornersStyle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item> </style>
 </resources>

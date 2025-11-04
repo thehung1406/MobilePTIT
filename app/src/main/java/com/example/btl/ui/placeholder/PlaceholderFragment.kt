@@ -14,8 +14,9 @@ class PlaceholderFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_placeholder, container, false)
-        val message = requireArguments().getString("message")
-        view.findViewById<TextView>(R.id.placeholder_text).text = message
+        val textView = view.findViewById<TextView>(R.id.placeholder_text)
+        // The fragment label is passed as an argument
+        textView.text = arguments?.getString("android:label")
         return view
     }
 }

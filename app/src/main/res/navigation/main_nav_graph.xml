@@ -34,15 +34,25 @@
         android:label="fragment_location_search"
         tools:layout="@layout/fragment_location_search" />
 
-    <!-- Placeholder Fragments -->
+    <!-- TripsFragment -->
     <fragment
         android:id="@+id/tripsFragment"
-        android:name="com.example.btl.ui.placeholder.PlaceholderFragment"
-        android:label="Chuyến đi" />
+        android:name="com.example.btl.ui.trips.TripsFragment"
+        android:label="Chuyến đi"
+        tools:layout="@layout/fragment_trips">
+        <action
+            android:id="@+id/action_tripsFragment_to_hotelSearchFragment"
+            app:destination="@id/hotelSearchFragment" />
+    </fragment>
+
+    <!-- DealsFragment -->
     <fragment
         android:id="@+id/dealsFragment"
-        android:name="com.example.btl.ui.placeholder.PlaceholderFragment"
-        android:label="Ưu đãi" />
+        android:name="com.example.btl.ui.deals.DealsFragment"
+        android:label="Ưu đãi"
+        tools:layout="@layout/fragment_deals" />
+
+    <!-- Placeholder Fragments -->
     <fragment
         android:id="@+id/favoritesFragment"
         android:name="com.example.btl.ui.placeholder.PlaceholderFragment"
