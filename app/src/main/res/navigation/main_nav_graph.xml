@@ -52,17 +52,17 @@
         android:label="Ưu đãi"
         tools:layout="@layout/fragment_deals" />
 
-    <!-- Placeholder Fragments -->
+    <!-- FavoritesFragment -->
     <fragment
         android:id="@+id/favoritesFragment"
-        android:name="com.example.btl.ui.placeholder.PlaceholderFragment"
-        android:label="Yêu thích" />
+        android:name="com.example.btl.ui.favorites.FavoritesFragment"
+        android:label="Yêu thích"
+        tools:layout="@layout/fragment_favorites" />
 
-    <!-- ProfileFragment -->
+    <!-- Placeholder Fragments -->
     <fragment
         android:id="@+id/moreFragment"
-        android:name="com.example.btl.ui.profile.ProfileFragment"
-        android:label="Hồ sơ"
-        tools:layout="@layout/fragment_profile" />
+        android:name="com.example.btl.ui.placeholder.PlaceholderFragment"
+        android:label="Thêm" />
 
 </navigation>
