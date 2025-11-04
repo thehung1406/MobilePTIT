@@ -192,7 +192,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chiết khấu ưu đãi Agoda..." />
+                    android:text="Chiết khấu ưu đãi" />
 
             </LinearLayout>
 
@@ -202,7 +202,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:text="NHẬN PHIẾU GIẢM GIÁ"
+                android:text="NHẬN"
                 android:textColor="#0077FF" />
 
         </RelativeLayout>

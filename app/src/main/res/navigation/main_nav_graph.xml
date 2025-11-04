@@ -59,10 +59,11 @@
         android:label="Yêu thích"
         tools:layout="@layout/fragment_favorites" />
 
-    <!-- Placeholder Fragments -->
+    <!-- ProfileFragment (was More) -->
     <fragment
         android:id="@+id/moreFragment"
-        android:name="com.example.btl.ui.placeholder.PlaceholderFragment"
-        android:label="Thêm" />
+        android:name="com.example.btl.ui.profile.ProfileFragment"
+        android:label="Hồ sơ"
+        tools:layout="@layout/fragment_profile" />
 
 </navigation>
