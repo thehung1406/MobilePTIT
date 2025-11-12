@@ -61,9 +61,23 @@
 
     <!-- ProfileFragment (was More) -->
     <fragment
-        android:id="@+id/moreFragment"
+        android:id="@+id/profileFragment"
         android:name="com.example.btl.ui.profile.ProfileFragment"
         android:label="Hồ sơ"
-        tools:layout="@layout/fragment_profile" />
+        tools:layout="@layout/fragment_profile" >
+        <action
+            android:id="@+id/action_profileFragment_to_accountSettingsFragment"
+            app:destination="@id/accountSettingsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/accountSettingsFragment"
+        android:name="com.example.btl.ui.profile.AccountSettingsFragment"
+        android:label="fragment_account_settings"
+        tools:layout="@layout/fragment_account_settings" />
 
 </navigation>

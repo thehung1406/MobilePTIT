@@ -17,7 +17,7 @@
         android:icon="@android:drawable/star_on"
         android:title="Yêu thích" />
     <item
-        android:id="@id/moreFragment"
+        android:id="@id/profileFragment"
         android:icon="@android:drawable/ic_menu_add"
         android:title="Thêm" />
 </menu>

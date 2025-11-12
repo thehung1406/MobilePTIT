@@ -10,7 +10,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.btl.LoginActivity
+import com.example.btl.R
 import com.example.btl.databinding.FragmentProfileBinding
 
 class ProfileFragment : Fragment() {
@@ -44,7 +46,7 @@ class ProfileFragment : Fragment() {
         }
 
         binding.profileButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng Hồ sơ đang được phát triển", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_profileFragment_to_accountSettingsFragment)
         }
 
         binding.walletButton.setOnClickListener {
