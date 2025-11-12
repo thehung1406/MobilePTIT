@@ -1,18 +1,16 @@
 package com.example.btl.ui.profile
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.example.btl.R
-import com.example.btl.databinding.FragmentAccountSettingsBinding
+import com.example.btl.databinding.FragmentChangePasswordBinding
 
-class AccountSettingsFragment : Fragment() {
+class ChangePasswordFragment : Fragment() {
 
-    private var _binding: FragmentAccountSettingsBinding? = null
+    private var _binding: FragmentChangePasswordBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -20,20 +18,15 @@ class AccountSettingsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentAccountSettingsBinding.inflate(inflater, container, false)
+        _binding = FragmentChangePasswordBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.toolbar.navigationIcon?.setTint(Color.WHITE)
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
-        }
-
-        binding.changePasswordButton.setOnClickListener {
-            findNavController().navigate(R.id.action_accountSettingsFragment_to_changePasswordFragment)
         }
     }
 

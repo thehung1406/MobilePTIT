@@ -29,26 +29,4 @@
         android:text="Đổi mật khẩu"
         android:textColor="@android:color/white" />
 
-    <Button
-        android:id="@+id/change_email_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="32dp"
-        android:backgroundTint="#A020F0"
-        android:text="Đổi email"
-        android:textColor="@android:color/white" />
-
-    <Button
-        android:id="@+id/change_phone_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="32dp"
-        android:backgroundTint="#A020F0"
-        android:text="Đổi số điện thoại"
-        android:textColor="@android:color/white" />
-
 </LinearLayout>
