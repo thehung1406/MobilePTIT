@@ -58,7 +58,7 @@ class ProfileFragment : Fragment() {
         }
 
         binding.dealsButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng Lịch sử đánh giá đang được phát triển", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_profileFragment_to_reviewHistoryFragment)
         }
 
         binding.messagesButton.setOnClickListener {

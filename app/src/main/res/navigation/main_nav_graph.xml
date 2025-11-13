@@ -72,6 +72,13 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_profileFragment_to_reviewHistoryFragment"
+            app:destination="@id/reviewHistoryFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
     </fragment>
 
     <fragment
@@ -93,5 +100,11 @@
         android:name="com.example.btl.ui.profile.ChangePasswordFragment"
         android:label="fragment_change_password"
         tools:layout="@layout/fragment_change_password" />
+    
+    <fragment
+        android:id="@+id/reviewHistoryFragment"
+        android:name="com.example.btl.ui.profile.ReviewHistoryFragment"
+        android:label="fragment_review_history"
+        tools:layout="@layout/fragment_review_history" />
 
 </navigation>
