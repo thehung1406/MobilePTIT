@@ -1,6 +1,5 @@
 package com.example.btl.ui.profile
 
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,7 +25,6 @@ class ChangePasswordFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.toolbar.navigationIcon?.setTint(Color.WHITE)
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }

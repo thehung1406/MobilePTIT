@@ -50,7 +50,7 @@ class ProfileFragment : Fragment() {
         }
 
         binding.walletButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng Ví Hotel Booking đang được phát triển", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_profileFragment_to_walletFragment)
         }
 
         binding.refundButton.setOnClickListener {

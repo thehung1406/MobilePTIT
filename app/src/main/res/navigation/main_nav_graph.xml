@@ -79,6 +79,13 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right" />
+        <action
+            android:id="@+id/action_profileFragment_to_walletFragment"
+            app:destination="@id/walletFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
     </fragment>
 
     <fragment
@@ -106,5 +113,11 @@
         android:name="com.example.btl.ui.profile.ReviewHistoryFragment"
         android:label="fragment_review_history"
         tools:layout="@layout/fragment_review_history" />
+    
+    <fragment
+        android:id="@+id/walletFragment"
+        android:name="com.example.btl.ui.profile.WalletFragment"
+        android:label="fragment_wallet"
+        tools:layout="@layout/fragment_wallet" />
 
 </navigation>
