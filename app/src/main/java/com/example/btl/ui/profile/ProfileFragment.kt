@@ -54,7 +54,7 @@ class ProfileFragment : Fragment() {
         }
 
         binding.refundButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng Thưởng hoàn tiền đang được phát triển", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_profileFragment_to_refundFragment)
         }
 
         binding.dealsButton.setOnClickListener {
