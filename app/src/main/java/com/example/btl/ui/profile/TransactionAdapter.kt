@@ -24,7 +24,7 @@ class TransactionAdapter(private val transactions: List<Transaction>) : Recycler
             binding.transactionAmount.text = transaction.amount
             binding.transactionDate.text = transaction.date
             if (transaction.amount.startsWith("+")) {
-                binding.root.setBackgroundColor(Color.GREEN)
+                binding.root.setBackgroundColor(Color.parseColor("#006400"))
             } else {
                 binding.root.setBackgroundColor(Color.RED)
             }
