@@ -62,7 +62,7 @@ class ProfileFragment : Fragment() {
         }
 
         binding.messagesButton.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng Tin nhắn từ khách sạn đang được phát triển", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_profileFragment_to_chatbotFragment)
         }
     }
 

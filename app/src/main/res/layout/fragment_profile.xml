@@ -124,7 +124,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start|center_vertical"
-            android:text="Tin nhắn từ khách sạn"
+            android:text="Chatbot tư vấn"
             android:textColor="@android:color/black" />
 
     </LinearLayout>
