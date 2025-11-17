@@ -88,6 +88,7 @@ class MapFragment : Fragment() {
                     }
                 } else {
                     binding.suggestionsRecyclerView.visibility = View.GONE
+                    binding.resultCardView.visibility = View.GONE // Hide result card
                 }
                 return true
             }
@@ -141,6 +142,7 @@ class MapFragment : Fragment() {
                 val addresses: List<Address> = geocoder.getFromLocationName(query, maxResults) ?: emptyList()
                 launch(Dispatchers.Main) {
                     if (maxResults == 1) {
+                        binding.suggestionsRecyclerView.visibility = View.GONE
                         if (addresses.isNotEmpty()) {
                             val address = addresses[0]
                             val endPoint = GeoPoint(address.latitude, address.longitude)
@@ -163,13 +165,28 @@ class MapFragment : Fragment() {
                             if (::locationOverlay.isInitialized && locationOverlay.myLocation != null) {
                                 val startPoint = locationOverlay.myLocation
                                 drawRoute(startPoint, endPoint)
+
+                                // Update and show result card
+                                binding.resultCardView.visibility = View.VISIBLE
+                                binding.destinationName.text = query
+                                binding.destinationAddress.text = address.getAddressLine(0)
+
+                                val distanceInMeters = startPoint.distanceToAsDouble(endPoint)
+                                val distanceInKm = distanceInMeters / 1000
+                                binding.destinationDistance.text = String.format("Khoảng cách: %.2f km", distanceInKm)
                             } else {
+                                // Hide card if current location is not available
+                                binding.resultCardView.visibility = View.GONE
                                 Toast.makeText(requireContext(), "Không thể lấy vị trí hiện tại.", Toast.LENGTH_SHORT).show()
                             }
                         } else {
+                            // Hide card if no location found
+                            binding.resultCardView.visibility = View.GONE
                             Toast.makeText(requireContext(), "Không tìm thấy địa điểm.", Toast.LENGTH_SHORT).show()
                         }
                     } else {
+                        // This is for suggestions
+                        binding.resultCardView.visibility = View.GONE
                         suggestionAdapter.updateSuggestions(addresses)
                         binding.suggestionsRecyclerView.visibility = if (addresses.isNotEmpty()) View.VISIBLE else View.GONE
                     }
@@ -177,6 +194,7 @@ class MapFragment : Fragment() {
             } catch (e: IOException) {
                 e.printStackTrace()
                 launch(Dispatchers.Main) {
+                    binding.resultCardView.visibility = View.GONE
                     Toast.makeText(requireContext(), "Lỗi khi tìm kiếm địa điểm.", Toast.LENGTH_SHORT).show()
                 }
             }
