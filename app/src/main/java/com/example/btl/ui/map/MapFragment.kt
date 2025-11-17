@@ -2,6 +2,7 @@ package com.example.btl.ui.map
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
@@ -214,6 +215,7 @@ class MapFragment : Fragment() {
                         roadOverlay?.let { binding.map.overlays.remove(it) }
                         roadOverlay = RoadManager.buildRoadOverlay(road)
                         roadOverlay?.paint?.strokeWidth = 15f // Make the line thicker
+                        roadOverlay?.paint?.color = Color.parseColor("#673AB7")
                         binding.map.overlays.add(roadOverlay)
                         binding.map.invalidate()
                     }
