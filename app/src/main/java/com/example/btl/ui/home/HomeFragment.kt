@@ -47,7 +47,7 @@ class HomeFragment : Fragment() {
             findNavController().navigate(R.id.action_homeFragment_to_hotelSearchFragment)
         }
         binding.mapCard.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng Bản đồ đang được phát triển", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_homeFragment_to_mapFragment)
         }
         binding.comboCard.setOnClickListener {
             Toast.makeText(requireContext(), "Chức năng Combo tiết kiệm đang được phát triển", Toast.LENGTH_SHORT).show()

@@ -74,7 +74,7 @@
                 android:layout_columnWeight="1"
                 android:layout_gravity="fill_vertical"
                 android:layout_margin="4dp"
-                app:cardBackgroundColor="#E6F4E6"
+                app:cardBackgroundColor="#E6F4EA"
                 app:cardCornerRadius="16dp">
 
                 <TextView

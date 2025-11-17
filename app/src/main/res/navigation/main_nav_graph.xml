@@ -14,6 +14,9 @@
         <action
             android:id="@+id/action_homeFragment_to_hotelSearchFragment"
             app:destination="@id/hotelSearchFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_mapFragment"
+            app:destination="@id/mapFragment" />
     </fragment>
 
     <!-- HotelSearchFragment -->
@@ -121,13 +124,13 @@
         android:name="com.example.btl.ui.profile.ChangePasswordFragment"
         android:label="fragment_change_password"
         tools:layout="@layout/fragment_change_password" />
-    
+
     <fragment
         android:id="@+id/reviewHistoryFragment"
         android:name="com.example.btl.ui.profile.ReviewHistoryFragment"
         android:label="fragment_review_history"
         tools:layout="@layout/fragment_review_history" />
-    
+
     <fragment
         android:id="@+id/walletFragment"
         android:name="com.example.btl.ui.profile.WalletFragment"
@@ -145,5 +148,11 @@
         android:name="com.example.btl.ui.profile.ChatbotFragment"
         android:label="fragment_chatbot"
         tools:layout="@layout/fragment_chatbot" />
+
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="com.example.btl.ui.map.MapFragment"
+        android:label="fragment_map"
+        tools:layout="@layout/fragment_map" />
 
 </navigation>

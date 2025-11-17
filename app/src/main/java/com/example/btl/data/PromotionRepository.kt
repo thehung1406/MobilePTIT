@@ -2,8 +2,11 @@ package com.example.btl.data
 
 import android.graphics.Color
 import com.example.btl.Promotion
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class PromotionRepository {
+@Singleton
+class PromotionRepository @Inject constructor() {
     fun getPromotions(): List<Promotion> {
         // In a real app, this would fetch data from a network or database.
         return listOf(
