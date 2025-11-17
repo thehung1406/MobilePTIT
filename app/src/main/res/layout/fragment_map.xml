@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:queryHint="Tìm kiếm địa điểm..."
-            android:background="@android:color/white"
+            android:background="@drawable/search_view_background"
             app:iconifiedByDefault="false" />
 
         <androidx.recyclerview.widget.RecyclerView
