@@ -21,10 +21,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.osmdroid.bonuspack.routing.OSRMRoadManager
+import org.osmdroid.bonuspack.routing.Road
+import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
@@ -38,6 +42,7 @@ class MapFragment : Fragment() {
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 1
     private lateinit var locationOverlay: MyLocationNewOverlay
     private var searchMarker: Marker? = null
+    private var roadOverlay: Polyline? = null
     private var searchJob: Job? = null
     private lateinit var suggestionAdapter: SuggestionAdapter
 
@@ -138,7 +143,7 @@ class MapFragment : Fragment() {
                     if (maxResults == 1) {
                         if (addresses.isNotEmpty()) {
                             val address = addresses[0]
-                            val geoPoint = GeoPoint(address.latitude, address.longitude)
+                            val endPoint = GeoPoint(address.latitude, address.longitude)
 
                             // Remove previous marker
                             searchMarker?.let {
@@ -147,13 +152,20 @@ class MapFragment : Fragment() {
 
                             // Add new marker
                             searchMarker = Marker(binding.map)
-                            searchMarker?.position = geoPoint
+                            searchMarker?.position = endPoint
                             searchMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                             searchMarker?.title = address.getAddressLine(0)
                             binding.map.overlays.add(searchMarker)
 
                             // Animate to the new location
-                            binding.map.controller.animateTo(geoPoint)
+                            binding.map.controller.animateTo(endPoint)
+                            
+                            if (::locationOverlay.isInitialized && locationOverlay.myLocation != null) {
+                                val startPoint = locationOverlay.myLocation
+                                drawRoute(startPoint, endPoint)
+                            } else {
+                                Toast.makeText(requireContext(), "Không thể lấy vị trí hiện tại.", Toast.LENGTH_SHORT).show()
+                            }
                         } else {
                             Toast.makeText(requireContext(), "Không tìm thấy địa điểm.", Toast.LENGTH_SHORT).show()
                         }
@@ -166,6 +178,35 @@ class MapFragment : Fragment() {
                 e.printStackTrace()
                 launch(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Lỗi khi tìm kiếm địa điểm.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    
+    private fun drawRoute(startPoint: GeoPoint, endPoint: GeoPoint) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val roadManager: RoadManager = OSRMRoadManager(requireContext(), Configuration.getInstance().userAgentValue)
+            val waypoints = ArrayList<GeoPoint>()
+            waypoints.add(startPoint)
+            waypoints.add(endPoint)
+            try {
+                val road = roadManager.getRoad(waypoints)
+                if (road.mStatus == Road.STATUS_OK) {
+                    launch(Dispatchers.Main) {
+                        roadOverlay?.let { binding.map.overlays.remove(it) }
+                        roadOverlay = RoadManager.buildRoadOverlay(road)
+                        binding.map.overlays.add(roadOverlay)
+                        binding.map.invalidate()
+                    }
+                } else {
+                    launch(Dispatchers.Main) {
+                        Toast.makeText(requireContext(), "Lỗi khi lấy chỉ đường: " + road.mStatus, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                launch(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Lỗi khi lấy chỉ đường.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
