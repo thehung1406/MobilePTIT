@@ -213,6 +213,7 @@ class MapFragment : Fragment() {
                     launch(Dispatchers.Main) {
                         roadOverlay?.let { binding.map.overlays.remove(it) }
                         roadOverlay = RoadManager.buildRoadOverlay(road)
+                        roadOverlay?.paint?.strokeWidth = 15f // Make the line thicker
                         binding.map.overlays.add(roadOverlay)
                         binding.map.invalidate()
                     }
