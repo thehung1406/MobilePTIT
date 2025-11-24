@@ -17,12 +17,12 @@
         android:layout_marginBottom="32dp"/>
 
     <EditText
-        android:id="@+id/username_edittext"
+        android:id="@+id/email_edittext"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Username"
+        android:hint="Email"
         android:maxLines="1"
-        android:inputType="text"
+        android:inputType="textEmailAddress"
         android:layout_marginBottom="16dp"/>
 
     <EditText
