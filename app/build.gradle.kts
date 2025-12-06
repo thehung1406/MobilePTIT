@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation("org.osmdroid:osmdroid-android:6.1.18")
+    implementation("com.github.MKergall:osmbonuspack:6.9.0")
     implementation("androidx.preference:preference-ktx:1.2.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

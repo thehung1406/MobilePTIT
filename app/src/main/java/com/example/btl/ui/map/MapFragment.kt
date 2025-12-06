@@ -2,6 +2,7 @@ package com.example.btl.ui.map
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
@@ -21,14 +22,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.osmdroid.bonuspack.routing.OSRMRoadManager
+import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.io.IOException
+import java.text.DecimalFormat
 
 class MapFragment : Fragment() {
 
@@ -38,6 +43,7 @@ class MapFragment : Fragment() {
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 1
     private lateinit var locationOverlay: MyLocationNewOverlay
     private var searchMarker: Marker? = null
+    private var roadOverlay: Polyline? = null
     private var searchJob: Job? = null
     private lateinit var suggestionAdapter: SuggestionAdapter
 
@@ -83,6 +89,7 @@ class MapFragment : Fragment() {
                     }
                 } else {
                     binding.suggestionsRecyclerView.visibility = View.GONE
+                    binding.locationInfoCard.visibility = View.GONE // Hide info card
                 }
                 return true
             }
@@ -149,13 +156,24 @@ class MapFragment : Fragment() {
                             searchMarker = Marker(binding.map)
                             searchMarker?.position = geoPoint
                             searchMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            searchMarker?.title = address.getAddressLine(0)
+                            searchMarker?.title = query // Use search query for marker title
                             binding.map.overlays.add(searchMarker)
 
                             // Animate to the new location
                             binding.map.controller.animateTo(geoPoint)
+
+                            // Draw route and show location info
+                            if (::locationOverlay.isInitialized && locationOverlay.myLocation != null) {
+                                val startPoint = locationOverlay.myLocation
+                                drawRoute(startPoint, geoPoint)
+                                showLocationInfo(query, address, startPoint.distanceToAsDouble(geoPoint))
+                            } else {
+                                Toast.makeText(requireContext(), "Không thể lấy vị trí hiện tại.", Toast.LENGTH_SHORT).show()
+                            }
+
                         } else {
                             Toast.makeText(requireContext(), "Không tìm thấy địa điểm.", Toast.LENGTH_SHORT).show()
+                            binding.locationInfoCard.visibility = View.GONE // Hide info card
                         }
                     } else {
                         suggestionAdapter.updateSuggestions(addresses)
@@ -166,6 +184,46 @@ class MapFragment : Fragment() {
                 e.printStackTrace()
                 launch(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Lỗi khi tìm kiếm địa điểm.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun showLocationInfo(name: String, address: Address, distance: Double) {
+        binding.locationInfoCard.visibility = View.VISIBLE
+        binding.locationName.text = name
+        binding.locationAddress.text = address.getAddressLine(0)
+        val df = DecimalFormat("#.##")
+        binding.locationDistance.text = "Khoảng cách: ${df.format(distance / 1000)} km"
+    }
+
+    private fun drawRoute(startPoint: GeoPoint, endPoint: GeoPoint) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val roadManager: RoadManager = OSRMRoadManager(requireContext(), Configuration.getInstance().userAgentValue)
+            (roadManager as OSRMRoadManager).setMean(OSRMRoadManager.MEAN_BY_FOOT) // or MEAN_BY_CAR
+            val waypoints = ArrayList<GeoPoint>()
+            waypoints.add(startPoint)
+            waypoints.add(endPoint)
+            try {
+                val road = roadManager.getRoad(waypoints)
+                launch(Dispatchers.Main) {
+                    roadOverlay?.let {
+                        binding.map.overlays.remove(it)
+                    }
+                    if (road.mStatus == org.osmdroid.bonuspack.routing.Road.STATUS_OK) {
+                        roadOverlay = RoadManager.buildRoadOverlay(road)
+                        roadOverlay?.outlinePaint?.color = Color.parseColor("#3867D6")
+                        roadOverlay?.outlinePaint?.strokeWidth = 12f
+                        binding.map.overlays.add(roadOverlay)
+                        binding.map.invalidate()
+                    } else {
+                        Toast.makeText(requireContext(), "Lỗi khi lấy chỉ đường: ${road.mStatus}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                launch(Dispatchers.Main) {
+                    Toast.makeText(requireContext(), "Lỗi khi tính toán chỉ đường.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
