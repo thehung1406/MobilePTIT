@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/hotelSearchFragment">
+
+    <!-- Hotel Search Fragment -->
+    <fragment
+        android:id="@+id/hotelSearchFragment"
+        android:name="com.example.btl.ui.hotel.HotelSearchFragment"
+        android:label="Tìm khách sạn"
+        tools:layout="@layout/fragment_hotel_search">
+
+        <action
+            android:id="@+id/action_hotelSearchFragment_to_hotelDetailFragment"
+            app:destination="@id/hotelDetailFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <!-- Hotel Detail Fragment -->
+    <fragment
+        android:id="@+id/hotelDetailFragment"
+        android:name="com.example.btl.ui.hotel.HotelDetailFragment"
+        android:label="Chi tiết khách sạn"
+        tools:layout="@layout/fragment_hotel_detail">
+
+        <!-- Arguments -->
+        <argument
+            android:name="propertyId"
+            app:argType="integer"
+            android:defaultValue="0" />
+
+        <argument
+            android:name="propertyName"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+        <argument
+            android:name="checkInDate"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="checkOutDate"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="numberOfGuests"
+            app:argType="integer"
+            android:defaultValue="2" />
+
+        <argument
+            android:name="numberOfRooms"
+            app:argType="integer"
+            android:defaultValue="1" />
+
+        <!-- Action to Booking -->
+        <action
+            android:id="@+id/action_hotelDetailFragment_to_bookingFragment"
+            app:destination="@id/bookingFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <!-- Booking Fragment -->
+    <fragment
+        android:id="@+id/bookingFragment"
+        android:name="com.example.btl.ui.booking.BookingFragment"
+        android:label="Đặt phòng"
+        tools:layout="@layout/fragment_booking">
+
+        <!-- Arguments -->
+        <argument
+            android:name="roomTypeId"
+            app:argType="integer"
+            android:defaultValue="0" />
+
+        <argument
+            android:name="propertyId"
+            app:argType="integer"
+            android:defaultValue="0" />
+
+        <argument
+            android:name="roomTypeName"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+
+        <argument
+            android:name="roomTypePrice"
+            app:argType="integer"
+            android:defaultValue="0" />
+
+        <argument
+            android:name="checkInDate"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="checkOutDate"
+            app:argType="long"
+            android:defaultValue="0L" />
+
+        <argument
+            android:name="numberOfGuests"
+            app:argType="integer"
+            android:defaultValue="2" />
+
+        <argument
+            android:name="numberOfRooms"
+            app:argType="integer"
+            android:defaultValue="1" />
+    </fragment>
+
+</navigation>

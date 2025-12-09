@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">BTL</string>
+    <string name="hotel_image">Hotel Image</string>
+    <string name="room_image">Room Image</string>
+    <string name="favorite">Favorite</string>
+    <string name="book_now">Đặt ngay</string>
+    <string name="back">Back</string>
 </resources>

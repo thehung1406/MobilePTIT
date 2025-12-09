@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/hotelImage"
+            android:layout_width="120dp"
+            android:layout_height="100dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/hotel_image"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_hotel_placeholder" />
+
+        <TextView
+            android:id="@+id/hotelName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:maxLines="2"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toStartOf="@+id/favoriteButton"
+            app:layout_constraintStart_toEndOf="@+id/hotelImage"
+            app:layout_constraintTop_toTopOf="@+id/hotelImage"
+            tools:text="Khách sạn Sunrise" />
+
+        <TextView
+            android:id="@+id/hotelAddress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="13sp"
+            android:textColor="@android:color/darker_gray"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:drawableStart="@android:drawable/ic_menu_mylocation"
+            android:drawablePadding="4dp"
+            app:layout_constraintEnd_toEndOf="@+id/hotelName"
+            app:layout_constraintStart_toStartOf="@+id/hotelName"
+            app:layout_constraintTop_toBottomOf="@+id/hotelName"
+            tools:text="123 Đường ABC, Quận 1, TP.HCM" />
+
+        <TextView
+            android:id="@+id/hotelDescription"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray"
+            android:maxLines="2"
+            android:ellipsize="end"
+            app:layout_constraintEnd_toEndOf="@+id/hotelAddress"
+            app:layout_constraintStart_toStartOf="@+id/hotelAddress"
+            app:layout_constraintTop_toBottomOf="@+id/hotelAddress"
+            tools:text="Khách sạn 4 sao với đầy đủ tiện nghi" />
+
+        <ImageButton
+            android:id="@+id/favoriteButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/favorite"
+            android:src="@android:drawable/btn_star_big_off"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/checkInOutText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="11sp"
+            android:textColor="@android:color/holo_blue_dark"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/hotelImage"
+            app:layout_constraintTop_toBottomOf="@+id/hotelImage"
+            tools:text="Nhận phòng: 14:00 | Trả phòng: 12:00" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

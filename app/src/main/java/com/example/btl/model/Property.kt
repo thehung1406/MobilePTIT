@@ -1,15 +1,38 @@
 package com.example.btl.model
 
+import com.google.gson.annotations.SerializedName
+
 data class Property(
-    val id: Int,
+    @SerializedName("id")
+    val id: Int? = null,
+
+    @SerializedName("name")
     val name: String,
+
+    @SerializedName("description")
     val description: String?,
+
+    @SerializedName("address")
     val address: String,
-    val is_active: Boolean,
-    val checkin: String,   // Varchar trong DB -> String
+
+    @SerializedName("is_active")
+    val is_active: Boolean = true,
+
+    @SerializedName("checkin")
+    val checkin: String,
+
+    @SerializedName("checkout")
     val checkout: String,
+
+    @SerializedName("contact")
     val contact: String?,
-    val latitude: Double,  // Double precision -> Double
+
+    @SerializedName("latitude")
+    val latitude: Double,
+
+    @SerializedName("longitude")
     val longitude: Double,
+
+    @SerializedName("image")
     val image: String?
 )

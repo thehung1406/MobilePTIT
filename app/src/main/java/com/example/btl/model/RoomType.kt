@@ -1,10 +1,26 @@
 package com.example.btl.model
 
+import com.google.gson.annotations.SerializedName
+
 data class RoomType(
-    val id: Int,
+    @SerializedName("id")
+    val id: Int? = null,
+
+    @SerializedName("room_type_id")
+    val room_type_id: Int? = null, // Alias cho id nếu backend trả về khác
+
+    @SerializedName("property_id")
     val property_id: Int,
+
+    @SerializedName("name")
     val name: String,
-    val price: Int,        // Integer -> Int (hoặc Long nếu giá trị lớn)
+
+    @SerializedName("price")
+    val price: Int,
+
+    @SerializedName("max_occupancy")
     val max_occupancy: Int,
-    val is_active: Boolean
+
+    @SerializedName("is_active")
+    val is_active: Boolean = true
 )

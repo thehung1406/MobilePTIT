@@ -17,7 +17,6 @@ object ApiClient {
         retrofit.create(AuthService::class.java)
     }
 
-    // Thêm các service mới
     val propertyService: PropertyService by lazy {
         retrofit.create(PropertyService::class.java)
     }
@@ -32,5 +31,9 @@ object ApiClient {
 
     val roomSearchService: RoomSearchService by lazy {
         retrofit.create(RoomSearchService::class.java)
+    }
+
+    val bookingService: BookingService by lazy {
+        retrofit.create(BookingService::class.java)
     }
 }
