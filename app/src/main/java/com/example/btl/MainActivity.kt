@@ -6,6 +6,8 @@ import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.example.btl.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.navigation.ui.setupWithNavController
+
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -17,15 +19,14 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Setup Navigation
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-        // Optional: Setup action bar with navigation
-        // setSupportActionBar(binding.toolbar) // if you have toolbar
-        // setupActionBarWithNavController(navController)
+        // ⭐ FIX QUAN TRỌNG
+        binding.bottomNavigation.setupWithNavController(navController)
     }
+
 
     override fun onSupportNavigateUp(): Boolean {
         val navHostFragment = supportFragmentManager
