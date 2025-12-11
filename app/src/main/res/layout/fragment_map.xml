@@ -18,7 +18,7 @@
         android:orientation="vertical"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginTop="24dp"> 
+        android:layout_marginTop="50dp">
 
         <androidx.appcompat.widget.SearchView
             android:id="@+id/search_view"
