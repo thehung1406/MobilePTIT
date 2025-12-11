@@ -2,7 +2,6 @@ package com.example.btl.ui.map
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
@@ -14,38 +13,45 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.example.btl.R
 import com.example.btl.databinding.FragmentMapBinding
+import com.example.btl.model.Property
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.osmdroid.bonuspack.routing.OSRMRoadManager
-import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
-import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.io.IOException
-import java.text.DecimalFormat
 
+@AndroidEntryPoint
 class MapFragment : Fragment() {
 
     private var _binding: FragmentMapBinding? = null
     private val binding get() = _binding!!
 
+    private val mapViewModel: MapViewModel by viewModels()
+
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 1
     private lateinit var locationOverlay: MyLocationNewOverlay
     private var searchMarker: Marker? = null
-    private var roadOverlay: Polyline? = null
     private var searchJob: Job? = null
     private lateinit var suggestionAdapter: SuggestionAdapter
+    
+    // Biến lưu khách sạn đang được chọn
+    private var currentSelectedProperty: Property? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,10 +69,31 @@ class MapFragment : Fragment() {
         ))
 
         setupRecyclerView()
+        setupObservers()
 
         binding.fabMyLocation.setOnClickListener {
             if (::locationOverlay.isInitialized && locationOverlay.myLocation != null) {
                 binding.map.controller.animateTo(locationOverlay.myLocation)
+            }
+        }
+        
+        // Xử lý nút đóng CardView thông tin
+        binding.btnCloseInfo.setOnClickListener {
+            binding.propertyInfoCard.visibility = View.GONE
+            currentSelectedProperty = null
+        }
+        
+        // Xử lý click vào "Xem chi tiết" -> Chuyển sang HotelDetailFragment
+        binding.tvViewDetail.setOnClickListener {
+            currentSelectedProperty?.let { property ->
+                val bundle = Bundle().apply {
+                    putInt("propertyId", property.id)
+                    putString("propertyName", property.name)
+                    // Có thể thêm các tham số khác nếu cần thiết (ví dụ ngày checkin mặc định)
+                }
+                findNavController().navigate(R.id.action_mapFragment_to_hotelDetailFragment, bundle)
+            } ?: run {
+                Toast.makeText(requireContext(), "Vui lòng chọn một khách sạn", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -89,7 +116,6 @@ class MapFragment : Fragment() {
                     }
                 } else {
                     binding.suggestionsRecyclerView.visibility = View.GONE
-                    binding.locationInfoCard.visibility = View.GONE // Hide info card
                 }
                 return true
             }
@@ -100,6 +126,8 @@ class MapFragment : Fragment() {
         suggestionAdapter = SuggestionAdapter { address ->
             binding.searchView.setQuery(address.getAddressLine(0), true)
             binding.suggestionsRecyclerView.visibility = View.GONE
+            // Khi chọn gợi ý từ list, thực hiện search để pin marker
+            searchLocation(address.getAddressLine(0), 1)
         }
         binding.suggestionsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -131,6 +159,63 @@ class MapFragment : Fragment() {
         }
     }
 
+    private fun setupObservers() {
+        mapViewModel.loadProperties()
+        mapViewModel.properties.observe(viewLifecycleOwner) {
+            drawPropertyMarkers(it)
+        }
+        mapViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            // Có thể thêm loading indicator
+        }
+        mapViewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun drawPropertyMarkers(properties: List<Property>) {
+        for (property in properties) {
+            if (property.latitude != null && property.longitude != null) {
+                val marker = Marker(binding.map)
+                marker.position = GeoPoint(property.latitude, property.longitude)
+                marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                marker.title = property.name
+                
+                // Lưu đối tượng Property vào relatedObject của marker
+                marker.relatedObject = property
+
+                marker.setOnMarkerClickListener { clickedMarker, _ ->
+                    val clickedProperty = clickedMarker.relatedObject as? Property
+                    clickedProperty?.let { showPropertyInfo(it) }
+                    true // Return true to indicate we handled the click
+                }
+                binding.map.overlays.add(marker)
+            }
+        }
+        binding.map.invalidate() // Redraw the map
+    }
+    
+    private fun showPropertyInfo(property: Property) {
+        // Lưu property hiện tại để dùng cho nút "Xem chi tiết"
+        currentSelectedProperty = property
+
+        binding.propertyInfoCard.visibility = View.VISIBLE
+        binding.tvPropertyName.text = property.name
+        binding.tvPropertyAddress.text = property.address
+        
+        // Load ảnh dùng Glide (Nếu có url ảnh)
+        if (!property.image.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(property.image)
+                .placeholder(R.drawable.ic_launcher_background) // Ảnh mặc định
+                .error(R.drawable.ic_launcher_background)
+                .into(binding.imgProperty)
+        } else {
+             binding.imgProperty.setImageResource(R.drawable.ic_launcher_background)
+        }
+    }
+
     private fun searchLocation(query: String, maxResults: Int) {
         if (!Geocoder.isPresent()) {
             Toast.makeText(requireContext(), "Dịch vụ Geocoder không khả dụng.", Toast.LENGTH_SHORT).show()
@@ -156,24 +241,13 @@ class MapFragment : Fragment() {
                             searchMarker = Marker(binding.map)
                             searchMarker?.position = geoPoint
                             searchMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            searchMarker?.title = query // Use search query for marker title
+                            searchMarker?.title = address.getAddressLine(0)
                             binding.map.overlays.add(searchMarker)
 
                             // Animate to the new location
                             binding.map.controller.animateTo(geoPoint)
-
-                            // Draw route and show location info
-                            if (::locationOverlay.isInitialized && locationOverlay.myLocation != null) {
-                                val startPoint = locationOverlay.myLocation
-                                drawRoute(startPoint, geoPoint)
-                                showLocationInfo(query, address, startPoint.distanceToAsDouble(geoPoint))
-                            } else {
-                                Toast.makeText(requireContext(), "Không thể lấy vị trí hiện tại.", Toast.LENGTH_SHORT).show()
-                            }
-
                         } else {
                             Toast.makeText(requireContext(), "Không tìm thấy địa điểm.", Toast.LENGTH_SHORT).show()
-                            binding.locationInfoCard.visibility = View.GONE // Hide info card
                         }
                     } else {
                         suggestionAdapter.updateSuggestions(addresses)
@@ -184,46 +258,6 @@ class MapFragment : Fragment() {
                 e.printStackTrace()
                 launch(Dispatchers.Main) {
                     Toast.makeText(requireContext(), "Lỗi khi tìm kiếm địa điểm.", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private fun showLocationInfo(name: String, address: Address, distance: Double) {
-        binding.locationInfoCard.visibility = View.VISIBLE
-        binding.locationName.text = name
-        binding.locationAddress.text = address.getAddressLine(0)
-        val df = DecimalFormat("#.##")
-        binding.locationDistance.text = "Khoảng cách: ${df.format(distance / 1000)} km"
-    }
-
-    private fun drawRoute(startPoint: GeoPoint, endPoint: GeoPoint) {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val roadManager: RoadManager = OSRMRoadManager(requireContext(), Configuration.getInstance().userAgentValue)
-            (roadManager as OSRMRoadManager).setMean(OSRMRoadManager.MEAN_BY_FOOT) // or MEAN_BY_CAR
-            val waypoints = ArrayList<GeoPoint>()
-            waypoints.add(startPoint)
-            waypoints.add(endPoint)
-            try {
-                val road = roadManager.getRoad(waypoints)
-                launch(Dispatchers.Main) {
-                    roadOverlay?.let {
-                        binding.map.overlays.remove(it)
-                    }
-                    if (road.mStatus == org.osmdroid.bonuspack.routing.Road.STATUS_OK) {
-                        roadOverlay = RoadManager.buildRoadOverlay(road)
-                        roadOverlay?.outlinePaint?.color = Color.parseColor("#3867D6")
-                        roadOverlay?.outlinePaint?.strokeWidth = 12f
-                        binding.map.overlays.add(roadOverlay)
-                        binding.map.invalidate()
-                    } else {
-                        Toast.makeText(requireContext(), "Lỗi khi lấy chỉ đường: ${road.mStatus}", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                launch(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Lỗi khi tính toán chỉ đường.", Toast.LENGTH_SHORT).show()
                 }
             }
         }

@@ -27,7 +27,7 @@
         <action
             android:id="@+id/action_hotelSearchFragment_to_locationSearchFragment"
             app:destination="@id/locationSearchFragment" />
-        <!-- ✅ THÊM: Navigate đến Hotel Detail -->
+        <!-- Navigate đến Hotel Detail -->
         <action
             android:id="@+id/action_hotelSearchFragment_to_hotelDetailFragment"
             app:destination="@id/hotelDetailFragment"
@@ -36,7 +36,7 @@
             app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right" />
     </fragment>
-    <!-- ✅ THÊM: HotelDetailFragment -->
+    <!-- HotelDetailFragment -->
     <fragment
         android:id="@+id/hotelDetailFragment"
         android:name="com.example.btl.ui.hotel.HotelDetailFragment"
@@ -84,7 +84,7 @@
             app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right" />
     </fragment>
-    <!-- ✅ THÊM: BookingFragment -->
+    <!-- BookingFragment -->
     <fragment
         android:id="@+id/bookingFragment"
         android:name="com.example.btl.ui.booking.BookingFragment"
@@ -257,6 +257,14 @@
         android:id="@+id/mapFragment"
         android:name="com.example.btl.ui.map.MapFragment"
         android:label="fragment_map"
-        tools:layout="@layout/fragment_map" />
+        tools:layout="@layout/fragment_map">
+        <action
+            android:id="@+id/action_mapFragment_to_hotelDetailFragment"
+            app:destination="@id/hotelDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+    </fragment>
 
 </navigation>
