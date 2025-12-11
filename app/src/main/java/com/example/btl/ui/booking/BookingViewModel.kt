@@ -4,61 +4,75 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.btl.api.ApiClient
 import com.example.btl.model.*
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.inject.Inject
 
-@HiltViewModel
-class BookingViewModel @Inject constructor() : ViewModel() {
+class BookingViewModel : ViewModel() {
 
     private val _bookingState = MutableStateFlow<BookingState>(BookingState.Idle)
     val bookingState: StateFlow<BookingState> = _bookingState.asStateFlow()
 
-    private val _propertyDetail = MutableStateFlow<Property?>(null)
-    val propertyDetail: StateFlow<Property?> = _propertyDetail.asStateFlow()
+    // ✅ Giữ nguyên interface cũ
+    private val _property = MutableStateFlow<Property?>(null)
+    val property: StateFlow<Property?> = _property.asStateFlow()
 
-    private val _roomTypeDetail = MutableStateFlow<RoomType?>(null)
-    val roomTypeDetail: StateFlow<RoomType?> = _roomTypeDetail.asStateFlow()
+    private val _roomType = MutableStateFlow<RoomTypeWithRooms?>(null)
+    val roomType: StateFlow<RoomTypeWithRooms?> = _roomType.asStateFlow()
 
-    private val _availableRooms = MutableStateFlow<List<Room>>(emptyList())
-    val availableRooms: StateFlow<List<Room>> = _availableRooms.asStateFlow()
+    private val _availableRooms = MutableStateFlow<List<RoomInfo>>(emptyList())
+    val availableRooms: StateFlow<List<RoomInfo>> = _availableRooms.asStateFlow()
 
     private val _totalPrice = MutableStateFlow(0)
     val totalPrice: StateFlow<Int> = _totalPrice.asStateFlow()
 
-    private val _selectedRooms = MutableStateFlow<List<Int>>(emptyList())
-    val selectedRooms: StateFlow<List<Int>> = _selectedRooms.asStateFlow()
+    private val _selectedRoomIds = MutableStateFlow<List<Int>>(emptyList())
+    val selectedRoomIds: StateFlow<List<Int>> = _selectedRoomIds.asStateFlow()
 
     private val _error = MutableStateFlow("")
     val error: StateFlow<String> = _error.asStateFlow()
 
-    fun loadBookingInfo(propertyId: Int, roomTypeId: Int) {
+    // ✅ Sửa logic: Load property + tìm room type
+    fun loadPropertyDetail(propertyId: Int, roomTypeId: Int) {
         viewModelScope.launch {
             try {
                 _bookingState.value = BookingState.Loading
 
-                val property = ApiClient.propertyService.getProperty(propertyId)
-                _propertyDetail.value = property
+                val propertyDetail = ApiClient.propertyService.getPropertyDetail(propertyId)
 
-                val roomTypes = ApiClient.roomTypeService.getRoomTypesByProperty(propertyId)
-                val roomType = roomTypes.find { it.id == roomTypeId }
-                _roomTypeDetail.value = roomType
+                // Tách ra giống cũ
+                _property.value = propertyDetail.property
 
-                val allRooms = ApiClient.roomService.getRoomsByProperty(propertyId)
-                val roomsOfType = allRooms.filter {
-                    it.room_type_id == roomTypeId && it.is_active
-                }
-                _availableRooms.value = roomsOfType
+                // Tìm room type cụ thể
+                val foundRoomType = propertyDetail.roomTypes.find { it.id == roomTypeId }
+                _roomType.value = foundRoomType
 
                 _bookingState.value = BookingState.Success
             } catch (e: Exception) {
                 _error.value = "Lỗi tải thông tin: ${e.message}"
                 _bookingState.value = BookingState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun loadAvailableRooms(
+        roomTypeId: Int,
+        checkin: String,
+        checkout: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val rooms = ApiClient.roomService.getAvailableRooms(
+                    roomTypeId = roomTypeId,
+                    checkin = checkin,
+                    checkout = checkout
+                )
+                _availableRooms.value = rooms
+            } catch (e: Exception) {
+                _error.value = "Lỗi tải phòng trống: ${e.message}"
             }
         }
     }
@@ -72,35 +86,36 @@ class BookingViewModel @Inject constructor() : ViewModel() {
     }
 
     fun selectRooms(numberOfRooms: Int) {
-        val availableRoomIds = _availableRooms.value
-            .filter { it.is_active }
+        val selectedIds = _availableRooms.value
+            .filter { it.isActive }
             .take(numberOfRooms)
-            .mapNotNull { it.id }
+            .map { it.id }
 
-        _selectedRooms.value = availableRoomIds
+        _selectedRoomIds.value = selectedIds
     }
 
     fun createBooking(
+        token: String,
         roomIds: List<Int>,
         checkInDate: String,
         checkOutDate: String,
-        numGuests: Int,
-        totalPrice: Int
+        numGuests: Int
     ) {
         viewModelScope.launch {
             try {
                 _bookingState.value = BookingState.Loading
 
                 val bookingRequest = BookingRequest(
-                    room_ids = roomIds,
+                    roomIds = roomIds,
                     checkin = checkInDate,
                     checkout = checkOutDate,
-                    num_guests = numGuests,
-                    price = totalPrice
+                    numGuests = numGuests
                 )
 
-                // ✅ Trả về TaskResponse thay vì BookingResponse
-                val response = ApiClient.bookingService.createBooking(bookingRequest)
+                val response = ApiClient.bookingService.createBooking(
+                    token = "Bearer $token",
+                    request = bookingRequest
+                )
 
                 _bookingState.value = BookingState.BookingSuccess(response)
             } catch (e: Exception) {
@@ -114,13 +129,25 @@ class BookingViewModel @Inject constructor() : ViewModel() {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         return sdf.format(Date(timestamp))
     }
-}
 
-// ✅ Sửa sealed class
-sealed class BookingState {
-    object Idle : BookingState()
-    object Loading : BookingState()
-    object Success : BookingState()
-    data class BookingSuccess(val response: TaskResponse) : BookingState()  // ✅ Đổi type
-    data class Error(val message: String) : BookingState()
+    fun calculateNumberOfNights(checkin: String, checkout: String): Int {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val checkinDate = sdf.parse(checkin)
+            val checkoutDate = sdf.parse(checkout)
+
+            val diff = checkoutDate!!.time - checkinDate!!.time
+            (diff / (1000 * 60 * 60 * 24)).toInt()
+        } catch (e: Exception) {
+            1
+        }
+    }
+
+    sealed class BookingState {
+        object Idle : BookingState()
+        object Loading : BookingState()
+        object Success : BookingState()
+        data class BookingSuccess(val response: BookingResponse) : BookingState()
+        data class Error(val message: String) : BookingState()
+    }
 }

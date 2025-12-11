@@ -6,84 +6,54 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.btl.databinding.ItemRoomTypeBinding
-import com.example.btl.model.RoomType
+import com.example.btl.model.RoomTypeWithRooms
 import java.text.NumberFormat
 import java.util.*
 
 class RoomTypeAdapter(
-    private val onItemClick: (RoomType) -> Unit
-) : ListAdapter<RoomType, RoomTypeAdapter.RoomTypeViewHolder>(RoomTypeDiffCallback()) {
+    private val onItemClick: (RoomTypeWithRooms) -> Unit
+) : ListAdapter<RoomTypeWithRooms, RoomTypeAdapter.ViewHolder>(DiffCallback()) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoomTypeViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemRoomTypeBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false
         )
-        return RoomTypeViewHolder(binding)
+        return ViewHolder(binding, onItemClick)
     }
 
-    override fun onBindViewHolder(holder: RoomTypeViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    inner class RoomTypeViewHolder(
-        private val binding: ItemRoomTypeBinding
+    class ViewHolder(
+        private val binding: ItemRoomTypeBinding,
+        private val onItemClick: (RoomTypeWithRooms) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(roomType: RoomType) {
-            binding.apply {
-                // Set room type details
-                roomTypeName.text = roomType.name
-                roomMaxOccupancy.text = "Tối đa ${roomType.max_occupancy} người"
+        fun bind(roomType: RoomTypeWithRooms) {
+            binding.roomTypeName.text = roomType.name
+            binding.roomTypePrice.text = formatPrice(roomType.price)
+            binding.maxOccupancy.text = "Tối đa ${roomType.maxOccupancy} người"
+            binding.availableRooms.text = "${roomType.rooms.size} phòng"
 
-                // Format price in Vietnamese currency
-                val formattedPrice = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
-                    .format(roomType.price)
-                roomPrice.text = "$formattedPrice / đêm"
-
-                // Availability status
-                availabilityText?.text = if (roomType.is_active) {
-                    "Còn phòng"
-                } else {
-                    "Hết phòng"
-                }
-
-                // Set availability color
-                availabilityText?.setTextColor(
-                    if (roomType.is_active) {
-                        itemView.context.getColor(android.R.color.holo_green_dark)
-                    } else {
-                        itemView.context.getColor(android.R.color.holo_red_dark)
-                    }
-                )
-
-                // Enable/disable booking based on availability
-                bookButton.isEnabled = roomType.is_active
-                bookButton.alpha = if (roomType.is_active) 1.0f else 0.5f
-
-                // Set click listeners
-                bookButton.setOnClickListener {
-                    if (roomType.is_active) {
-                        onItemClick(roomType)
-                    }
-                }
-
-                root.setOnClickListener {
-                    if (roomType.is_active) {
-                        onItemClick(roomType)
-                    }
-                }
+            binding.root.setOnClickListener {
+                onItemClick(roomType)
             }
+        }
+
+        private fun formatPrice(price: Int): String {
+            return NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(price)
         }
     }
 
-    class RoomTypeDiffCallback : DiffUtil.ItemCallback<RoomType>() {
-        override fun areItemsTheSame(oldItem: RoomType, newItem: RoomType): Boolean {
+    class DiffCallback : DiffUtil.ItemCallback<RoomTypeWithRooms>() {
+        override fun areItemsTheSame(oldItem: RoomTypeWithRooms, newItem: RoomTypeWithRooms): Boolean {
             return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: RoomType, newItem: RoomType): Boolean {
+        override fun areContentsTheSame(oldItem: RoomTypeWithRooms, newItem: RoomTypeWithRooms): Boolean {
             return oldItem == newItem
         }
     }

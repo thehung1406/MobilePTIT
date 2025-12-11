@@ -1,5 +1,6 @@
 package com.example.btl.ui.booking
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,20 +16,16 @@ import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.example.btl.R
 import com.example.btl.databinding.FragmentBookingBinding
-import com.example.btl.model.TaskResponse
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-@AndroidEntryPoint
 class BookingFragment : Fragment() {
 
     private var _binding: FragmentBookingBinding? = null
     private val binding get() = _binding!!
-
     private val viewModel: BookingViewModel by viewModels()
 
     // Arguments from navigation
@@ -59,8 +56,12 @@ class BookingFragment : Fragment() {
 
         // Load booking info
         if (propertyId > 0 && roomTypeId > 0) {
-            viewModel.loadBookingInfo(propertyId, roomTypeId)
-            viewModel.selectRooms(numberOfRooms)
+            viewModel.loadPropertyDetail(propertyId, roomTypeId)
+
+            val checkin = viewModel.formatDate(checkInDate)
+            val checkout = viewModel.formatDate(checkOutDate)
+            viewModel.loadAvailableRooms(roomTypeId, checkin, checkout)
+
             calculateAndDisplayPrice()
         }
     }
@@ -80,7 +81,7 @@ class BookingFragment : Fragment() {
 
     private fun setupClickListeners() {
         // Back button
-        binding.backButton.setOnClickListener {
+        binding.backButton?.setOnClickListener {
             findNavController().navigateUp()
         }
 
@@ -95,7 +96,10 @@ class BookingFragment : Fragment() {
                 numberOfRooms--
                 updateRoomsDisplay()
                 calculateAndDisplayPrice()
-                viewModel.selectRooms(numberOfRooms)
+
+                val checkin = viewModel.formatDate(checkInDate)
+                val checkout = viewModel.formatDate(checkOutDate)
+                viewModel.loadAvailableRooms(roomTypeId, checkin, checkout)
             }
         }
 
@@ -104,7 +108,10 @@ class BookingFragment : Fragment() {
                 numberOfRooms++
                 updateRoomsDisplay()
                 calculateAndDisplayPrice()
-                viewModel.selectRooms(numberOfRooms)
+
+                val checkin = viewModel.formatDate(checkInDate)
+                val checkout = viewModel.formatDate(checkOutDate)
+                viewModel.loadAvailableRooms(roomTypeId, checkin, checkout)
             }
         }
 
@@ -146,7 +153,7 @@ class BookingFragment : Fragment() {
     }
 
     private fun confirmBooking() {
-        val selectedRoomIds = viewModel.selectedRooms.value
+        val selectedRoomIds = viewModel.selectedRoomIds.value
 
         // Validate selected rooms
         if (selectedRoomIds.isEmpty()) {
@@ -174,7 +181,6 @@ class BookingFragment : Fragment() {
                 Số khách: $numberOfGuests
                 Check-in: ${formatDateDisplay(checkInDate)}
                 Check-out: ${formatDateDisplay(checkOutDate)}
-                
                 Tổng tiền: ${formatPrice(viewModel.totalPrice.value)}
             """.trimIndent())
             .setPositiveButton("Xác nhận") { _, _ ->
@@ -185,17 +191,20 @@ class BookingFragment : Fragment() {
     }
 
     private fun processBooking() {
-        val selectedRoomIds = viewModel.selectedRooms.value
+        val selectedRoomIds = viewModel.selectedRoomIds.value
         val checkIn = viewModel.formatDate(checkInDate)
         val checkOut = viewModel.formatDate(checkOutDate)
-        val totalPrice = viewModel.totalPrice.value
+
+        // Get token from SharedPreferences
+        val prefs = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        val token = prefs.getString("auth_token", "") ?: ""
 
         viewModel.createBooking(
+            token = token,
             roomIds = selectedRoomIds,
             checkInDate = checkIn,
             checkOutDate = checkOut,
-            numGuests = numberOfGuests,
-            totalPrice = totalPrice
+            numGuests = numberOfGuests
         )
     }
 
@@ -207,25 +216,25 @@ class BookingFragment : Fragment() {
                 launch {
                     viewModel.bookingState.collect { state ->
                         when (state) {
-                            is BookingState.Loading -> {
+                            is BookingViewModel.BookingState.Loading -> {
                                 binding.progressBar?.visibility = View.VISIBLE
                                 binding.confirmBookingButton.isEnabled = false
                             }
-                            is BookingState.Success -> {
+                            is BookingViewModel.BookingState.Success -> {
                                 binding.progressBar?.visibility = View.GONE
                                 binding.confirmBookingButton.isEnabled = true
                                 displayBookingInfo()
                             }
-                            is BookingState.BookingSuccess -> {
+                            is BookingViewModel.BookingState.BookingSuccess -> {
                                 binding.progressBar?.visibility = View.GONE
                                 showBookingSuccess(state.response)
                             }
-                            is BookingState.Error -> {
+                            is BookingViewModel.BookingState.Error -> {
                                 binding.progressBar?.visibility = View.GONE
                                 binding.confirmBookingButton.isEnabled = true
                                 Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
                             }
-                            is BookingState.Idle -> {
+                            is BookingViewModel.BookingState.Idle -> {
                                 binding.progressBar?.visibility = View.GONE
                             }
                         }
@@ -234,7 +243,7 @@ class BookingFragment : Fragment() {
 
                 // Observe property details
                 launch {
-                    viewModel.propertyDetail.collect { property ->
+                    viewModel.property.collect { property ->
                         property?.let {
                             binding.propertyName?.text = it.name
                             binding.propertyAddress?.text = it.address
@@ -243,17 +252,18 @@ class BookingFragment : Fragment() {
                                 .load(it.image)
                                 .placeholder(R.drawable.ic_hotel_placeholder)
                                 .error(android.R.drawable.ic_menu_gallery)
-                                .into(binding.propertyImage)
+                                .into(binding.propertyImage ?: return@let)
                         }
                     }
                 }
 
                 // Observe room type details
                 launch {
-                    viewModel.roomTypeDetail.collect { roomType ->
+                    viewModel.roomType.collect { roomType ->
                         roomType?.let {
                             binding.roomTypeName?.text = it.name
-                            binding.maxOccupancy?.text = "Tối đa ${it.max_occupancy} người"
+                            binding.maxOccupancy?.text = "Tối đa ${it.maxOccupancy} người"
+                            binding.roomTypePrice?.text = "${formatPrice(it.price)} / đêm"
                         }
                     }
                 }
@@ -262,6 +272,11 @@ class BookingFragment : Fragment() {
                 launch {
                     viewModel.availableRooms.collect { rooms ->
                         binding.availableRoomsCount?.text = "${rooms.size} phòng còn trống"
+
+                        // Auto select rooms
+                        if (rooms.isNotEmpty()) {
+                            viewModel.selectRooms(numberOfRooms)
+                        }
 
                         // Hiển thị warning nếu không đủ phòng
                         if (rooms.size < numberOfRooms) {
@@ -295,16 +310,15 @@ class BookingFragment : Fragment() {
         binding.numberOfRoomsValue?.text = numberOfRooms.toString()
     }
 
-    private fun showBookingSuccess(response: TaskResponse) {
+    private fun showBookingSuccess(response: com.example.btl.model.BookingResponse) {
         AlertDialog.Builder(requireContext())
-            .setTitle("✅ Yêu cầu đặt phòng đã được gửi!")
+            .setTitle("✅ Đặt phòng thành công!")
             .setMessage("""
-                ${response.message}
+                📋 Mã đặt phòng: ${response.bookingId}
+                🔄 Trạng thái: ${response.status}
+                ⏰ Hết hạn lúc: ${response.expiresAt}
                 
-                📋 Mã theo dõi: ${response.task_id}
-                🔄 Trạng thái: ${getStatusText(response.status)}
-                
-                💡 Chúng tôi sẽ xác nhận đơn đặt phòng của bạn trong vài phút.
+                💡 Vui lòng hoàn tất thanh toán trước thời gian hết hạn.
                 📧 Kiểm tra email để nhận thông tin chi tiết.
             """.trimIndent())
             .setPositiveButton("Xem lịch sử đặt phòng") { _, _ ->
@@ -316,16 +330,6 @@ class BookingFragment : Fragment() {
             }
             .setCancelable(false)
             .show()
-    }
-
-    private fun getStatusText(status: String): String {
-        return when (status.lowercase()) {
-            "queued" -> "Đang xếp hàng"
-            "processing" -> "Đang xử lý"
-            "completed" -> "Hoàn thành"
-            "failed" -> "Thất bại"
-            else -> status
-        }
     }
 
     private fun formatPrice(price: Int): String {

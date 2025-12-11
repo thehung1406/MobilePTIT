@@ -6,8 +6,11 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,49 +18,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/roomTypeName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
-            tools:text="Phòng Deluxe" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/roomMaxOccupancy"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textSize="14sp"
-                android:textColor="@android:color/darker_gray"
-                android:drawableStart="@android:drawable/ic_menu_myplaces"
-                android:drawablePadding="4dp"
-                tools:text="Tối đa 2 người" />
-
-            <TextView
-                android:id="@+id/availabilityText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="13sp"
-                android:textStyle="bold"
-                tools:text="Còn phòng" />
-
-        </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="12dp"
-            android:background="@android:color/darker_gray" />
-
+        <!-- Header: Name + Price -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -65,21 +26,92 @@
             android:gravity="center_vertical">
 
             <TextView
-                android:id="@+id/roomPrice"
+                android:id="@+id/roomTypeName"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
-                android:textColor="@android:color/holo_red_dark"
-                tools:text="1.500.000 VNĐ / đêm" />
+                android:textColor="#212121"
+                tools:text="Phòng Deluxe King"/>
 
-            <Button
-                android:id="@+id/bookButton"
+            <TextView
+                android:id="@+id/roomTypePrice"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/book_now"
-                android:textSize="14sp" />
+                android:textSize="16sp"
+                android:textColor="#D32F2F"
+                android:textStyle="bold"
+                tools:text="1.500.000 ₫"/>
+
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="#E0E0E0"/>
+
+        <!-- Info: Occupancy + Rooms -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Max Occupancy -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_menu_mylocation"
+                    android:tint="#757575"
+                    tools:ignore="UseAppTint" />
+
+                <TextView
+                    android:id="@+id/maxOccupancy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textSize="14sp"
+                    android:textColor="#757575"
+                    tools:text="Tối đa 2 người"/>
+
+            </LinearLayout>
+
+            <!-- Available Rooms -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="end|center_vertical">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_menu_info_details"
+                    android:tint="#4CAF50"
+                    tools:ignore="UseAppTint" />
+
+                <TextView
+                    android:id="@+id/availableRooms"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:textSize="14sp"
+                    android:textColor="#4CAF50"
+                    android:textStyle="bold"
+                    tools:text="5 phòng"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 

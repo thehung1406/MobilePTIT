@@ -5,16 +5,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.btl.api.ApiClient
 import com.example.btl.model.Property
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.btl.model.PropertySearchRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class HotelSearchViewModel @Inject constructor() : ViewModel() {
+class HotelSearchViewModel : ViewModel() {
 
+    // ✅ GIỮ NGUYÊN: Interface cũ
     private val _searchResults = MutableStateFlow<List<Property>>(emptyList())
     val searchResults: StateFlow<List<Property>> = _searchResults.asStateFlow()
 
@@ -27,32 +26,7 @@ class HotelSearchViewModel @Inject constructor() : ViewModel() {
     private val _hasSearched = MutableStateFlow(false)
     val hasSearched: StateFlow<Boolean> = _hasSearched.asStateFlow()
 
-    // ✅ THÊM: Load tất cả properties
-    fun loadAllProperties() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _hasSearched.value = true
-            Log.d("HotelSearchVM", "Loading all properties...")
-
-            try {
-                val allProperties = ApiClient.propertyService.getProperties()
-                val activeProperties = allProperties.filter { it.is_active }
-
-                _searchResults.value = activeProperties
-                _error.value = ""
-
-                Log.d("HotelSearchVM", "Loaded ${activeProperties.size} properties")
-            } catch (e: Exception) {
-                Log.e("HotelSearchVM", "Error loading properties: ${e.message}")
-                _error.value = "Lỗi tải dữ liệu: ${e.message}"
-                _searchResults.value = emptyList()
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    // ✅ SỬA: Cho phép search không cần location
+    // ✅ CHỈ SỬA LOGIC bên trong function này
     fun searchHotels(
         location: String,
         checkInDate: Long,
@@ -63,30 +37,41 @@ class HotelSearchViewModel @Inject constructor() : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             _hasSearched.value = true
-            Log.d("HotelSearchVM", "Searching with location: '$location'")
+
+            Log.d("HotelSearchVM", "Searching with keyword: '$location'")
 
             try {
-                val allProperties = ApiClient.propertyService.getProperties()
+                // ✅ LOGIC MỚI: Gọi API search
+                val response = ApiClient.propertyService.searchProperties(
+                    PropertySearchRequest(keyword = location)
+                )
 
-                // ✅ Nếu không có location, hiển thị tất cả
-                val filteredProperties = if (location.isEmpty()) {
-                    allProperties.filter { it.is_active }
-                } else {
-                    allProperties.filter { property ->
-                        property.is_active &&
-                                (property.address.contains(location, ignoreCase = true) ||
-                                        property.name.contains(location, ignoreCase = true))
-                    }
+                // ✅ Convert PropertySearchResult → Property
+                val properties = response.results.map { result ->
+                    Property(
+                        id = result.id,
+                        name = result.name,
+                        address = result.address,
+                        image = result.image,
+                        description = "", // Không có trong search result
+                        checkin = "",
+                        checkout = "",
+                        latitude = result.latitude,
+                        longitude = result.longitude,
+                        isActive = true,
+                        contact = result.contact
+                    )
                 }
 
-                _searchResults.value = filteredProperties
-                _error.value = if (filteredProperties.isEmpty() && location.isNotEmpty()) {
-                    "Không tìm thấy khách sạn tại $location"
+                _searchResults.value = properties
+                _error.value = if (properties.isEmpty()) {
+                    "Không tìm thấy khách sạn với từ khóa '$location'"
                 } else {
                     ""
                 }
 
-                Log.d("HotelSearchVM", "Found ${filteredProperties.size} properties")
+                Log.d("HotelSearchVM", "Found ${properties.size} properties")
+
             } catch (e: Exception) {
                 Log.e("HotelSearchVM", "Search error: ${e.message}", e)
                 _error.value = "Lỗi tìm kiếm: ${e.message}"
@@ -97,22 +82,31 @@ class HotelSearchViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    // ✅ GIỮ NGUYÊN các function khác
     fun clearResults() {
         _searchResults.value = emptyList()
         _hasSearched.value = false
         _error.value = ""
     }
 
-    fun filterByPriceRange(minPrice: Int, maxPrice: Int) {
-        // TODO: Implement price range filtering
-    }
-
-    fun sortByPrice(ascending: Boolean = true) {
-        val currentList = _searchResults.value
-        _searchResults.value = if (ascending) {
-            currentList.sortedBy { it.name }
-        } else {
-            currentList.sortedByDescending { it.name }
+    fun loadAllProperties() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _hasSearched.value = true
+            Log.d("HotelSearchVM", "Loading all properties...")
+            try {
+                val allProperties = ApiClient.propertyService.getAllProperties()
+                val activeProperties = allProperties.filter { it.isActive }
+                _searchResults.value = activeProperties
+                _error.value = ""
+                Log.d("HotelSearchVM", "Loaded ${activeProperties.size} properties")
+            } catch (e: Exception) {
+                Log.e("HotelSearchVM", "Error loading properties: ${e.message}")
+                _error.value = "Lỗi tải dữ liệu: ${e.message}"
+                _searchResults.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 }

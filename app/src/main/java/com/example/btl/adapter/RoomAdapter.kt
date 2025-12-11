@@ -36,14 +36,14 @@ class RoomAdapter(
                 roomName.text = room.name
 
                 // Set availability
-                availabilityBadge?.text = if (room.is_active) {
+                availabilityBadge?.text = if (room.isActive) {
                     "Có sẵn"
                 } else {
                     "Đã đặt"
                 }
 
                 availabilityBadge?.setBackgroundResource(
-                    if (room.is_active) {
+                    if (room.isActive) {
                         R.drawable.bg_available
                     } else {
                         R.drawable.bg_unavailable
@@ -60,13 +60,13 @@ class RoomAdapter(
 
                 // Set click listener
                 root.setOnClickListener {
-                    if (room.is_active) {
+                    if (room.isActive) {
                         onItemClick(room)
                     }
                 }
 
-                root.isEnabled = room.is_active
-                root.alpha = if (room.is_active) 1.0f else 0.6f
+                root.isEnabled = room.isActive
+                root.alpha = if (room.isActive) 1.0f else 0.6f
             }
         }
     }

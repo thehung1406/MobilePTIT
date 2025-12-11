@@ -4,13 +4,10 @@ import com.google.gson.annotations.SerializedName
 
 data class RoomType(
     @SerializedName("id")
-    val id: Int? = null,
-
-    @SerializedName("room_type_id")
-    val room_type_id: Int? = null, // Alias cho id nếu backend trả về khác
+    val id: Int,
 
     @SerializedName("property_id")
-    val property_id: Int,
+    val propertyId: Int,
 
     @SerializedName("name")
     val name: String,
@@ -19,8 +16,8 @@ data class RoomType(
     val price: Int,
 
     @SerializedName("max_occupancy")
-    val max_occupancy: Int,
+    val maxOccupancy: Int,
 
     @SerializedName("is_active")
-    val is_active: Boolean = true
+    val isActive: Boolean
 )

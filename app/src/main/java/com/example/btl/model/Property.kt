@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class Property(
     @SerializedName("id")
-    val id: Int? = null,
+    val id: Int,
 
     @SerializedName("name")
     val name: String,
@@ -15,8 +15,17 @@ data class Property(
     @SerializedName("address")
     val address: String,
 
+    @SerializedName("latitude")
+    val latitude: Double?,
+
+    @SerializedName("longitude")
+    val longitude: Double?,
+
+    @SerializedName("image")
+    val image: String?,
+
     @SerializedName("is_active")
-    val is_active: Boolean = true,
+    val isActive: Boolean,
 
     @SerializedName("checkin")
     val checkin: String,
@@ -25,14 +34,5 @@ data class Property(
     val checkout: String,
 
     @SerializedName("contact")
-    val contact: String?,
-
-    @SerializedName("latitude")
-    val latitude: Double,
-
-    @SerializedName("longitude")
-    val longitude: Double,
-
-    @SerializedName("image")
-    val image: String?
+    val contact: String?
 )

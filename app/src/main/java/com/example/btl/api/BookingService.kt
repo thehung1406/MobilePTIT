@@ -5,26 +5,39 @@ import retrofit2.http.*
 
 interface BookingService {
 
-    // POST /booking - Tạo booking (trả về TaskResponse)
+    /**
+     * POST /booking
+     * Tạo booking mới
+     * Body: {
+     *   "room_ids": [1, 2],
+     *   "checkin": "2025-12-13",
+     *   "checkout": "2025-12-15",
+     *   "num_guests": 2
+     * }
+     */
     @POST("booking")
-    suspend fun createBooking(@Body bookingRequest: BookingRequest): TaskResponse  // ✅ Đổi từ BookingResponse
+    suspend fun createBooking(
+        @Header("Authorization") token: String,
+        @Body request: BookingRequest
+    ): BookingResponse
 
-    // GET /booking - Lấy danh sách bookings
-    @GET("booking")
-    suspend fun getAllBookings(): List<Booking>
+    /**
+     * GET /booking/my
+     * Lấy danh sách booking của user hiện tại
+     * Requires: Authorization header with Bearer token
+     */
+    @GET("booking/my")
+    suspend fun getMyBookings(
+        @Header("Authorization") token: String
+    ): List<Booking>
 
-    // GET /booking/{booking_id}
-    @GET("booking/{booking_id}")
-    suspend fun getBookingById(@Path("booking_id") bookingId: Int): Booking
-
-    // PATCH /booking/{booking_id}
-    @PATCH("booking/{booking_id}")
-    suspend fun updateBookingStatus(
-        @Path("booking_id") bookingId: Int,
-        @Body status: Map<String, String>
-    ): Booking
-
-    // DELETE /booking/{booking_id}
-    @DELETE("booking/{booking_id}")
-    suspend fun deleteBooking(@Path("booking_id") bookingId: Int): Map<String, String>
+    /**
+     * POST /booking/{booking_id}/cancel
+     * Hủy booking
+     */
+    @POST("booking/{booking_id}/cancel")
+    suspend fun cancelBooking(
+        @Header("Authorization") token: String,
+        @Path("booking_id") bookingId: Int
+    ): CancelBookingResponse
 }
