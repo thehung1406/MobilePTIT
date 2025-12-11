@@ -229,7 +229,8 @@ class BookingFragment : Fragment() {
                             }
                             is BookingViewModel.BookingState.BookingSuccess -> {
                                 binding.progressBar?.visibility = View.GONE
-                                showBookingSuccess(state.response)
+                                // Thay vì show dialog, chuyển thẳng sang TripsFragment
+                                navigateToTrips()
                             }
                             is BookingViewModel.BookingState.Error -> {
                                 binding.progressBar?.visibility = View.GONE
@@ -306,29 +307,12 @@ class BookingFragment : Fragment() {
         binding.numberOfGuestsValue?.text = numberOfGuests.toString()
     }
 
-    private fun showBookingSuccess(response: com.example.btl.model.BookingResponse) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("✅ Đặt phòng thành công!")
-            .setMessage("""
-                📋 Mã đặt phòng: ${response.bookingId}
-                🔄 Trạng thái: ${response.status}
-                ⏰ Hết hạn lúc: ${response.expiresAt}
-                
-                💡 Vui lòng hoàn tất thanh toán trước thời gian hết hạn.
-                📧 Kiểm tra email để nhận thông tin chi tiết.
-            """.trimIndent())
-            .setPositiveButton("Xem lịch sử đặt phòng") { _, _ ->
-                // Điều hướng sang Fragment Trips
-                val navOptions = NavOptions.Builder()
-                    .setPopUpTo(R.id.bookingFragment, true)
-                    .build()
-                findNavController().navigate(R.id.tripsFragment, null, navOptions)
-            }
-            .setNegativeButton("Đóng") { _, _ ->
-                findNavController().navigateUp()
-            }
-            .setCancelable(false)
-            .show()
+    private fun navigateToTrips() {
+        Toast.makeText(requireContext(), "Đặt phòng thành công!", Toast.LENGTH_SHORT).show()
+        val navOptions = NavOptions.Builder()
+            .setPopUpTo(R.id.bookingFragment, true)
+            .build()
+        findNavController().navigate(R.id.tripsFragment, null, navOptions)
     }
 
     private fun formatPrice(price: Int): String {

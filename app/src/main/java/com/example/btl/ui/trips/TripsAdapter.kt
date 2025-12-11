@@ -54,14 +54,25 @@ class TripsAdapter(
                 else -> binding.tvStatus.setTextColor(Color.GRAY)
             }
 
-            // Display room info (taking the first room for simplicity)
-            val firstRoom = booking.rooms?.firstOrNull()
-            if (firstRoom != null) {
-                binding.tvRoomName.text = firstRoom.roomName ?: "Phòng không xác định"
-                binding.tvDate.text = "${formatDate(firstRoom.checkin)} - ${formatDate(firstRoom.checkout)}"
+            // Display room info
+            // With new JSON format, we might not have room names directly
+            val roomName = if (!booking.rooms.isNullOrEmpty()) {
+                booking.rooms.firstOrNull()?.roomName ?: "Phòng không xác định"
+            } else if (!booking.selectedRooms.isNullOrEmpty()) {
+                "Phòng ID: ${booking.selectedRooms.joinToString(", ")}"
             } else {
-                binding.tvRoomName.text = "Thông tin phòng chưa có"
-                binding.tvDate.text = ""
+                "Thông tin phòng chưa có"
+            }
+            binding.tvRoomName.text = roomName
+
+            // Display date
+            val displayCheckin = booking.displayCheckin
+            val displayCheckout = booking.displayCheckout
+            
+            if (displayCheckin != null && displayCheckout != null) {
+                binding.tvDate.text = "${formatDate(displayCheckin)} - ${formatDate(displayCheckout)}"
+            } else {
+                 binding.tvDate.text = ""
             }
             
             // Show/Hide buttons based on status
@@ -88,7 +99,7 @@ class TripsAdapter(
         private fun formatDate(dateStr: String?): String {
             if (dateStr.isNullOrEmpty()) return ""
             return try {
-                // Assuming API returns yyyy-MM-dd
+                // Try format yyyy-MM-dd
                 val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale("vi"))
                 val date = inputFormat.parse(dateStr)
@@ -101,8 +112,7 @@ class TripsAdapter(
         private fun formatDateTime(dateTimeStr: String?): String {
              if (dateTimeStr.isNullOrEmpty()) return ""
             return try {
-                // Assuming API returns ISO 8601 or similar
-                // Adjust format as needed based on actual API response
+                // Try ISO 8601 or similar variants
                 val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
                 val outputFormat = SimpleDateFormat("HH:mm dd/MM/yyyy", Locale("vi"))
                 val date = inputFormat.parse(dateTimeStr)

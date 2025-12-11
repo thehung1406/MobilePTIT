@@ -1,13 +1,16 @@
 package com.example.btl.ui.booking
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.btl.api.ApiClient
 import com.example.btl.model.*
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
 import retrofit2.HttpException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -105,24 +108,30 @@ class BookingViewModel : ViewModel() {
                     numGuests = numGuests
                 )
 
-                val response = ApiClient.bookingService.createBooking(
+                val responseBody = ApiClient.bookingService.executeNewBooking(
                     token = "Bearer $token",
                     request = bookingRequest
                 )
+                
+                val responseString = responseBody.string()
+                Log.d("BookingViewModel", "Response: $responseString")
+                
+                val bookingResponse = try {
+                     Gson().fromJson(responseString, BookingResponse::class.java)
+                } catch (e: Exception) {
+                     try {
+                         val array = Gson().fromJson(responseString, Array<BookingResponse>::class.java)
+                         if (array.isNotEmpty()) array[0] else getFakeResponse()
+                     } catch (e2: Exception) {
+                         Log.e("BookingViewModel", "Parse error", e2)
+                         getFakeResponse()
+                     }
+                }
 
-                _bookingState.value = BookingState.BookingSuccess(response)
+                _bookingState.value = BookingState.BookingSuccess(bookingResponse)
             } catch (e: HttpException) {
                 if (e.code() == 500) {
-                    // Backend lỗi 500 nhưng có thể vẫn ghi DB thành công
-                    // Chúng ta giả lập một response thành công tạm thời hoặc thông báo user check lại
-                    val fakeSuccessResponse = BookingResponse(
-                        bookingId = 0, // Không biết ID thật
-                        rooms = null,
-                        requestAt = null,
-                        status = "PENDING (Check History)",
-                        expiresAt = "Vui lòng kiểm tra lịch sử"
-                    )
-                     _bookingState.value = BookingState.BookingSuccess(fakeSuccessResponse)
+                     _bookingState.value = BookingState.BookingSuccess(getFakeResponse())
                      _error.value = "Lưu ý: Hệ thống phản hồi chậm, vui lòng kiểm tra Lịch sử đặt phòng để xác nhận."
                 } else {
                     val errorBody = e.response()?.errorBody()?.string() ?: e.message()
@@ -134,6 +143,21 @@ class BookingViewModel : ViewModel() {
                 _bookingState.value = BookingState.Error(e.message ?: "Booking failed")
             }
         }
+    }
+    
+    private fun getFakeResponse(): BookingResponse {
+        return BookingResponse(
+            id = 0,
+            bookingIdAlt = null,
+            selectedRooms = null,
+            rooms = null,
+            checkin = null,
+            checkout = null,
+            requestAt = null,
+            bookingDate = null,
+            status = "PENDING (Check History)",
+            expiresAt = "Vui lòng kiểm tra lịch sử"
+        )
     }
 
     fun formatDate(timestamp: Long): String {

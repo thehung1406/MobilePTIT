@@ -3,6 +3,7 @@ package com.example.btl.api
 import com.example.btl.model.BookingRequest
 import com.example.btl.model.BookingResponse
 import com.example.btl.model.CancelBookingResponse
+import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -13,13 +14,14 @@ interface BookingService {
 
     /**
      * POST /booking
-     * Tạo booking mới
+     * Tạo booking mới. 
+     * Renamed to executeNewBooking and use ResponseBody to ensure fresh build and bypass Gson issues.
      */
     @POST("booking")
-    suspend fun createBooking(
+    suspend fun executeNewBooking(
         @Header("Authorization") token: String,
         @Body request: BookingRequest
-    ): BookingResponse
+    ): ResponseBody
     
     /**
      * GET /booking/my
