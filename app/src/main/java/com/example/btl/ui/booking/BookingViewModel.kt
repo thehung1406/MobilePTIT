@@ -69,7 +69,10 @@ class BookingViewModel : ViewModel() {
                     checkout = checkout
                 )
                 // ✅ Lấy list availableRooms từ response
-                _availableRooms.value = response.availableRooms
+                _availableRooms.value = response
+                
+                // Tự động chọn phòng nếu có đủ phòng trống
+                // selectRooms(1) // Tạm thời để user tự chọn hoặc logic khác xử lý
             } catch (e: Exception) {
                 _error.value = "Lỗi tải phòng trống: ${e.message}"
             }

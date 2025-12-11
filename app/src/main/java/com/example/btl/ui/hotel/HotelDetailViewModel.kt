@@ -81,16 +81,17 @@ class HotelDetailViewModel : ViewModel() {
         return roomTypes.map { roomType ->
             try {
                 // Gọi API lấy phòng trống
-                val response = ApiClient.roomService.getAvailableRooms(
+                // response bây giờ là List<AvailableRoom>
+                val availableRoomsList = ApiClient.roomService.getAvailableRooms(
                     roomTypeId = roomType.id,
                     checkin = checkInStr,
                     checkout = checkOutStr
                 )
 
-                Log.d("HotelDetailVM", "API Response for ${roomType.name}: $response")
+                Log.d("HotelDetailVM", "API Response for ${roomType.name}: $availableRoomsList")
 
                 val filteredRooms = roomType.rooms.filter { room ->
-                    response.availableRooms.any { availableRoom ->
+                    availableRoomsList.any { availableRoom ->
                         availableRoom.roomId == room.id
                     }
                 }
@@ -105,6 +106,4 @@ class HotelDetailViewModel : ViewModel() {
             }
         }
     }
-
-
 }

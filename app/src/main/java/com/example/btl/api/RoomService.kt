@@ -1,6 +1,6 @@
 package com.example.btl.api
 
-import com.example.btl.model.AvailableRoomsResponse
+import com.example.btl.model.AvailableRoom
 import retrofit2.http.*
 
 interface RoomService {
@@ -8,20 +8,12 @@ interface RoomService {
     /**
      * GET /rooms/room-types/{room_type_id}/available-rooms
      * Lấy danh sách phòng available theo room_type_id và ngày
-     * Response: [
-     *   {
-     *     "id": 1,
-     *     "name": "string",
-     *     "image": "string",
-     *     "is_active": true,
-     *     "room_type_id": 0
-     *   }
-     * ]
+     * Response: List<AvailableRoom>
      */
     @GET("rooms/room-types/{room_type_id}/available-rooms")
     suspend fun getAvailableRooms(
         @Path("room_type_id") roomTypeId: Int,
         @Query("checkin") checkin: String,      // Format: "2025-12-11"
         @Query("checkout") checkout: String     // Format: "2025-12-12"
-    ): AvailableRoomsResponse
+    ): List<AvailableRoom>
 }
