@@ -1,6 +1,6 @@
 package com.example.btl.api
 
-import com.example.btl.model.RoomInfo
+import com.example.btl.model.AvailableRoomsResponse
 import retrofit2.http.*
 
 interface RoomService {
@@ -23,5 +23,5 @@ interface RoomService {
         @Path("room_type_id") roomTypeId: Int,
         @Query("checkin") checkin: String,      // Format: "2025-12-11"
         @Query("checkout") checkout: String     // Format: "2025-12-12"
-    ): List<RoomInfo>
+    ): AvailableRoomsResponse
 }

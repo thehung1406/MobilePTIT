@@ -1,5 +1,6 @@
 package com.example.btl.api
 
+import com.example.btl.model.AvailableRoomsResponse
 import com.example.btl.model.Property
 import com.example.btl.model.PropertyDetailResponse
 import com.example.btl.model.PropertySearchRequest

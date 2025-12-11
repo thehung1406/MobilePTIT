@@ -3,46 +3,56 @@ package com.example.btl.model
 import com.google.gson.annotations.SerializedName
 
 data class PropertyDetailResponse(
-    @SerializedName("property")
-    val property: Property,
-
-    @SerializedName("room_types")
-    val roomTypes: List<RoomTypeWithRooms>
-)
-
-data class RoomTypeWithRooms(
     @SerializedName("id")
     val id: Int,
 
     @SerializedName("name")
     val name: String,
 
-    @SerializedName("price")
-    val price: Int,
+    @SerializedName("description")
+    val description: String?,
 
-    @SerializedName("max_occupancy")
-    val maxOccupancy: Int,
-
-    @SerializedName("is_active")
-    val isActive: Boolean,
-
-    @SerializedName("rooms")
-    val rooms: List<RoomInfo>
-)
-
-data class RoomInfo(
-    @SerializedName("id")
-    val id: Int,
-
-    @SerializedName("name")
-    val name: String,
+    @SerializedName("address")
+    val address: String,
 
     @SerializedName("image")
     val image: String?,
 
-    @SerializedName("is_active")
-    val isActive: Boolean,
+    @SerializedName("latitude")
+    val latitude: Double,
 
-    @SerializedName("room_type_id")
-    val roomTypeId: Int
-)
+    @SerializedName("longitude")
+    val longitude: Double,
+
+    @SerializedName("checkin")
+    val checkin: String,
+
+    @SerializedName("checkout")
+    val checkout: String,
+
+    @SerializedName("contact")
+    val contact: String?,
+
+    @SerializedName("room_types")  // ✅ Khớp với API: room_types
+    val roomTypes: List<RoomTypeWithRooms>,
+
+    @SerializedName("reviews")
+    val reviews: List<Any>? = null
+) {
+    // ✅ Helper để convert sang Property model cũ
+    fun toProperty(): Property {
+        return Property(
+            id = id,
+            name = name,
+            description = description,
+            address = address,
+            image = image,
+            latitude = latitude,
+            longitude = longitude,
+            checkin = checkin,
+            checkout = checkout,
+            contact = contact,
+            isActive = true
+        )
+    }
+}

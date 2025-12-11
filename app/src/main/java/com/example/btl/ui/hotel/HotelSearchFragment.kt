@@ -58,14 +58,9 @@ class HotelSearchFragment : Fragment() {
         setDefaultDates()
         updateGuestsRoomsText()
 
-        // Load tất cả hotels ngay khi vào màn hình
-        loadAllHotels()
+        // Load tất cả hotels ngay khi vào màn hìn
     }
 
-    private fun loadAllHotels() {
-        Log.d("HotelSearchFragment", "Loading all hotels...")
-        viewModel.loadAllProperties()
-    }
 
     private fun setupRecyclerView() {
         hotelAdapter = HotelAdapter(

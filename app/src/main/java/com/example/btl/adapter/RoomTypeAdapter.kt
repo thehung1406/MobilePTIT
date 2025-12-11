@@ -8,53 +8,63 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.btl.databinding.ItemRoomTypeBinding
 import com.example.btl.model.RoomTypeWithRooms
 import java.text.NumberFormat
-import java.util.*
+import java.util.Locale
 
 class RoomTypeAdapter(
     private val onItemClick: (RoomTypeWithRooms) -> Unit
-) : ListAdapter<RoomTypeWithRooms, RoomTypeAdapter.ViewHolder>(DiffCallback()) {
+) : ListAdapter<RoomTypeWithRooms, RoomTypeAdapter.RoomTypeViewHolder>(RoomTypeDiffCallback()) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RoomTypeViewHolder {
         val binding = ItemRoomTypeBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false
         )
-        return ViewHolder(binding, onItemClick)
+        return RoomTypeViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RoomTypeViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    class ViewHolder(
-        private val binding: ItemRoomTypeBinding,
-        private val onItemClick: (RoomTypeWithRooms) -> Unit
+    inner class RoomTypeViewHolder(
+        private val binding: ItemRoomTypeBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(roomType: RoomTypeWithRooms) {
-            binding.roomTypeName.text = roomType.name
-            binding.roomTypePrice.text = formatPrice(roomType.price)
-            binding.maxOccupancy.text = "Tối đa ${roomType.maxOccupancy} người"
-            binding.availableRooms.text = "${roomType.rooms.size} phòng"
+            binding.apply {
+                roomTypeName.text = roomType.name
 
-            binding.root.setOnClickListener {
-                onItemClick(roomType)
+                val formatter = NumberFormat.getNumberInstance(Locale("vi", "VN"))
+                roomTypePrice.text = "${formatter.format(roomType.price)} ₫"
+
+                // ✅ Hiển thị số phòng trống
+                val availableCount = roomType.rooms.filter { it.isActive }.size
+                maxOccupancy.text = "Tối đa ${roomType.maxOccupancy} người • $availableCount phòng trống"
+
+                // ✅ Disable nếu hết phòng
+                root.isEnabled = availableCount > 0
+                root.alpha = if (availableCount > 0) 1.0f else 0.5f
+
+                root.setOnClickListener {
+                    if (availableCount > 0) {
+                        onItemClick(roomType)
+                    }
+                }
             }
         }
 
-        private fun formatPrice(price: Int): String {
-            return NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(price)
-        }
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<RoomTypeWithRooms>() {
-        override fun areItemsTheSame(oldItem: RoomTypeWithRooms, newItem: RoomTypeWithRooms): Boolean {
-            return oldItem.id == newItem.id
-        }
+    private class RoomTypeDiffCallback : DiffUtil.ItemCallback<RoomTypeWithRooms>() {
+        override fun areItemsTheSame(
+            oldItem: RoomTypeWithRooms,
+            newItem: RoomTypeWithRooms
+        ): Boolean = oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: RoomTypeWithRooms, newItem: RoomTypeWithRooms): Boolean {
-            return oldItem == newItem
-        }
+        override fun areContentsTheSame(
+            oldItem: RoomTypeWithRooms,
+            newItem: RoomTypeWithRooms
+        ): Boolean = oldItem == newItem
     }
 }

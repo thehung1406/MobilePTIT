@@ -1,6 +1,7 @@
 package com.example.btl.ui.hotel
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -56,14 +57,16 @@ class HotelDetailFragment : Fragment() {
         observeViewModel()
 
         if (propertyId > 0) {
-            viewModel.loadPropertyDetail(propertyId)
+            // ✅ Truyền thêm check-in/out dates
+            viewModel.loadPropertyDetail(propertyId, checkInDate, checkOutDate)
+        } else {
+            Toast.makeText(requireContext(), "Lỗi: Không tìm thấy ID khách sạn", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun setupRecyclerView() {
         roomTypeAdapter = RoomTypeAdapter(
             onItemClick = { roomType ->
-                // Truyền đầy đủ thông tin sang màn hình booking
                 val bundle = Bundle().apply {
                     putInt("roomTypeId", roomType.id)
                     putInt("propertyId", propertyId)
@@ -76,16 +79,9 @@ class HotelDetailFragment : Fragment() {
                 }
 
                 try {
-                    findNavController().navigate(
-                        R.id.bookingFragment,
-                        bundle
-                    )
+                    findNavController().navigate(R.id.bookingFragment, bundle)
                 } catch (e: Exception) {
-                    Toast.makeText(
-                        requireContext(),
-                        "Lỗi: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(requireContext(), "Lỗi: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -106,7 +102,6 @@ class HotelDetailFragment : Fragment() {
         }
 
         binding.callButton?.setOnClickListener {
-            // TODO: Implement call function
             Toast.makeText(requireContext(), "Gọi điện", Toast.LENGTH_SHORT).show()
         }
     }
@@ -118,13 +113,38 @@ class HotelDetailFragment : Fragment() {
                 // Observe property details
                 launch {
                     viewModel.property.collect { property ->
+                        // ✅ LOG để debug
+                        Log.d("HotelDetailFragment", "Property received: ${property?.name}")
+
                         property?.let {
+                            // ✅ Hiển thị thông tin cơ bản
                             binding.hotelName?.text = it.name
                             binding.hotelAddress?.text = it.address
-                            binding.hotelDescription?.text = it.description
-                            binding.checkInTime?.text = "Nhận phòng: ${it.checkin}"
-                            binding.checkOutTime?.text = "Trả phòng: ${it.checkout}"
 
+                            // ✅ Xử lý description
+                            val description = it.description
+                            Log.d("HotelDetailFragment", "Description: '$description'")
+
+                            binding.hotelDescription?.apply {
+                                text = when {
+                                    description.isNullOrBlank() -> "Thông tin mô tả đang được cập nhật..."
+                                    else -> description
+                                }
+                                visibility = View.VISIBLE // ✅ FORCE VISIBLE
+                            }
+
+                            // ✅ Xử lý check-in/out time
+                            binding.checkInTime?.apply {
+                                text = if (it.checkin.isNullOrBlank()) "14:00" else "Nhận phòng: ${it.checkin}"
+                                visibility = View.VISIBLE
+                            }
+
+                            binding.checkOutTime?.apply {
+                                text = if (it.checkout.isNullOrBlank()) "12:00" else "Trả phòng: ${it.checkout}"
+                                visibility = View.VISIBLE
+                            }
+
+                            // ✅ Load image
                             Glide.with(requireContext())
                                 .load(it.image)
                                 .placeholder(android.R.drawable.ic_menu_gallery)
@@ -137,6 +157,7 @@ class HotelDetailFragment : Fragment() {
                 // Observe room types
                 launch {
                     viewModel.roomTypes.collect { roomTypes ->
+                        Log.d("HotelDetailFragment", "RoomTypes count: ${roomTypes.size}")
                         roomTypeAdapter.submitList(roomTypes)
                     }
                 }
@@ -152,6 +173,7 @@ class HotelDetailFragment : Fragment() {
                 launch {
                     viewModel.error.collect { errorMessage ->
                         if (errorMessage.isNotEmpty()) {
+                            Log.e("HotelDetailFragment", "Error: $errorMessage")
                             Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_LONG).show()
                         }
                     }

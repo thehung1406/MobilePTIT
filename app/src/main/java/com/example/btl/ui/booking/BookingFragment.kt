@@ -273,10 +273,6 @@ class BookingFragment : Fragment() {
                     viewModel.availableRooms.collect { rooms ->
                         binding.availableRoomsCount?.text = "${rooms.size} phòng còn trống"
 
-                        // Auto select rooms
-                        if (rooms.isNotEmpty()) {
-                            viewModel.selectRooms(numberOfRooms)
-                        }
 
                         // Hiển thị warning nếu không đủ phòng
                         if (rooms.size < numberOfRooms) {

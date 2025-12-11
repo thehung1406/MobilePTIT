@@ -28,10 +28,10 @@ data class Property(
     val isActive: Boolean,
 
     @SerializedName("checkin")
-    val checkin: String,
+    val checkin: String?,
 
     @SerializedName("checkout")
-    val checkout: String,
+    val checkout: String?,
 
     @SerializedName("contact")
     val contact: String?

@@ -1,5 +1,6 @@
 package com.example.btl.adapter
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
@@ -36,10 +37,6 @@ class HotelAdapter(
                 // Set property details
                 hotelName.text = property.name
                 hotelAddress.text = property.address
-                hotelDescription.text = property.description ?: "Không có mô tả"
-
-                // Display check-in/out times
-                checkInOutText?.text = "Nhận phòng: ${property.checkin} | Trả phòng: ${property.checkout}"
 
                 // Load hotel image
                 Glide.with(itemView.context)

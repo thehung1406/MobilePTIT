@@ -16,15 +16,15 @@ class BookingViewModel : ViewModel() {
     private val _bookingState = MutableStateFlow<BookingState>(BookingState.Idle)
     val bookingState: StateFlow<BookingState> = _bookingState.asStateFlow()
 
-    // ✅ Giữ nguyên interface cũ
     private val _property = MutableStateFlow<Property?>(null)
     val property: StateFlow<Property?> = _property.asStateFlow()
 
     private val _roomType = MutableStateFlow<RoomTypeWithRooms?>(null)
     val roomType: StateFlow<RoomTypeWithRooms?> = _roomType.asStateFlow()
 
-    private val _availableRooms = MutableStateFlow<List<RoomInfo>>(emptyList())
-    val availableRooms: StateFlow<List<RoomInfo>> = _availableRooms.asStateFlow()
+    // ✅ FIX 1: Đổi từ AvailableRoomsResponse → List<AvailableRoom>
+    private val _availableRooms = MutableStateFlow<List<AvailableRoom>>(emptyList())
+    val availableRooms: StateFlow<List<AvailableRoom>> = _availableRooms.asStateFlow()
 
     private val _totalPrice = MutableStateFlow(0)
     val totalPrice: StateFlow<Int> = _totalPrice.asStateFlow()
@@ -35,7 +35,6 @@ class BookingViewModel : ViewModel() {
     private val _error = MutableStateFlow("")
     val error: StateFlow<String> = _error.asStateFlow()
 
-    // ✅ Sửa logic: Load property + tìm room type
     fun loadPropertyDetail(propertyId: Int, roomTypeId: Int) {
         viewModelScope.launch {
             try {
@@ -43,10 +42,8 @@ class BookingViewModel : ViewModel() {
 
                 val propertyDetail = ApiClient.propertyService.getPropertyDetail(propertyId)
 
-                // Tách ra giống cũ
-                _property.value = propertyDetail.property
+                _property.value = propertyDetail.toProperty()
 
-                // Tìm room type cụ thể
                 val foundRoomType = propertyDetail.roomTypes.find { it.id == roomTypeId }
                 _roomType.value = foundRoomType
 
@@ -58,6 +55,7 @@ class BookingViewModel : ViewModel() {
         }
     }
 
+    // ✅ FIX 2: Sửa loadAvailableRooms
     fun loadAvailableRooms(
         roomTypeId: Int,
         checkin: String,
@@ -65,12 +63,13 @@ class BookingViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                val rooms = ApiClient.roomService.getAvailableRooms(
+                val response = ApiClient.roomService.getAvailableRooms(
                     roomTypeId = roomTypeId,
                     checkin = checkin,
                     checkout = checkout
                 )
-                _availableRooms.value = rooms
+                // ✅ Lấy list availableRooms từ response
+                _availableRooms.value = response.availableRooms
             } catch (e: Exception) {
                 _error.value = "Lỗi tải phòng trống: ${e.message}"
             }
@@ -85,11 +84,11 @@ class BookingViewModel : ViewModel() {
         _totalPrice.value = roomTypePrice * numberOfNights * numberOfRooms
     }
 
+    // ✅ FIX 3: Sửa selectRooms
     fun selectRooms(numberOfRooms: Int) {
         val selectedIds = _availableRooms.value
-            .filter { it.isActive }
             .take(numberOfRooms)
-            .map { it.id }
+            .map { it.roomId }  // ✅ Đổi it.id → it.roomId
 
         _selectedRoomIds.value = selectedIds
     }
