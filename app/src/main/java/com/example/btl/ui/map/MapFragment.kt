@@ -2,6 +2,7 @@ package com.example.btl.ui.map
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
 import android.os.Bundle
@@ -27,10 +28,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.osmdroid.bonuspack.routing.GraphHopperRoadManager
+import org.osmdroid.bonuspack.routing.Road
+import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
@@ -50,8 +55,8 @@ class MapFragment : Fragment() {
     private var searchJob: Job? = null
     private lateinit var suggestionAdapter: SuggestionAdapter
     private var currentSelectedProperty: Property? = null
+    private var roadOverlay: Polyline? = null
 
-    // Cờ để kiểm tra vị trí ban đầu đã được set chưa
     private var initialLocationSet = false
 
     override fun onCreateView(
@@ -81,6 +86,8 @@ class MapFragment : Fragment() {
         binding.btnCloseInfo.setOnClickListener {
             binding.propertyInfoCard.visibility = View.GONE
             currentSelectedProperty = null
+            roadOverlay?.let { binding.map.overlays.remove(it) }
+            binding.map.invalidate()
         }
 
         binding.tvViewDetail.setOnClickListener {
@@ -93,6 +100,10 @@ class MapFragment : Fragment() {
             } ?: run {
                 Toast.makeText(requireContext(), "Vui lòng chọn một khách sạn", Toast.LENGTH_SHORT).show()
             }
+        }
+        
+        binding.btnDirections.setOnClickListener {
+            drawRouteToProperty()
         }
 
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
@@ -119,13 +130,12 @@ class MapFragment : Fragment() {
             }
         })
 
-        // Nhận tọa độ từ HotelDetailFragment
         val lat = arguments?.getDouble("latitude", 0.0) ?: 0.0
         val lon = arguments?.getDouble("longitude", 0.0) ?: 0.0
         val name = arguments?.getString("propertyName")
 
         if (lat != 0.0 && lon != 0.0) {
-            initialLocationSet = true // Đánh dấu đã set vị trí
+            initialLocationSet = true
             binding.map.post {
                 val point = GeoPoint(lat, lon)
                 binding.map.controller.setCenter(point)
@@ -163,7 +173,6 @@ class MapFragment : Fragment() {
         binding.map.overlays.add(locationOverlay)
 
         locationOverlay.runOnFirstFix {
-            // Chỉ di chuyển đến vị trí người dùng nếu chưa có vị trí nào được set
             if (!initialLocationSet) {
                 activity?.runOnUiThread {
                     binding.map.controller.setCenter(locationOverlay.myLocation)
@@ -178,8 +187,8 @@ class MapFragment : Fragment() {
         mapViewModel.properties.observe(viewLifecycleOwner) {
             drawPropertyMarkers(it)
         }
-        mapViewModel.isLoading.observe(viewLifecycleOwner) {
-            // Handle loading state
+        mapViewModel.isLoading.observe(viewLifecycleOwner) { 
+            // Handle loading state 
         }
         mapViewModel.errorMessage.observe(viewLifecycleOwner) { error ->
             error?.let {
@@ -207,25 +216,28 @@ class MapFragment : Fragment() {
         }
         binding.map.invalidate()
     }
-
+    
     private fun showPropertyInfo(property: Property) {
         currentSelectedProperty = property
 
         binding.propertyInfoCard.visibility = View.VISIBLE
         binding.tvPropertyName.text = property.name
         binding.tvPropertyAddress.text = property.address
-
+        
         if (!property.image.isNullOrEmpty()) {
             Glide.with(this)
                 .load(property.image)
-                .placeholder(R.drawable.ic_launcher_background)
+                .placeholder(R.drawable.ic_launcher_background) 
                 .error(R.drawable.ic_launcher_background)
                 .into(binding.imgProperty)
         } else {
-            binding.imgProperty.setImageResource(R.drawable.ic_launcher_background)
+             binding.imgProperty.setImageResource(R.drawable.ic_launcher_background)
         }
+        
+        roadOverlay?.let { binding.map.overlays.remove(it) }
+        binding.map.invalidate()
     }
-
+    
     private fun addSingleMarker(geoPoint: GeoPoint, title: String) {
         searchMarker?.let {
             binding.map.overlays.remove(it)
@@ -237,6 +249,50 @@ class MapFragment : Fragment() {
         searchMarker?.title = title
         binding.map.overlays.add(searchMarker)
         binding.map.invalidate()
+    }
+
+    private fun drawRouteToProperty() {
+        val property = currentSelectedProperty
+        val myLocation = locationOverlay.myLocation
+
+        if (property?.latitude == null || property.longitude == null) {
+            Toast.makeText(requireContext(), "Khách sạn không có thông tin vị trí.", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (myLocation == null) {
+            Toast.makeText(requireContext(), "Không tìm thấy vị trí của bạn. Vui lòng thử lại.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val startPoint = myLocation
+        val endPoint = GeoPoint(property.latitude, property.longitude)
+        
+        // TODO: Thay YOUR_API_KEY bằng API Key của bạn lấy từ https://www.graphhopper.com/dashboard/#/register
+        val roadManager: RoadManager = GraphHopperRoadManager("2e85400a-44aa-4322-a886-f1b0c22e3c97", false)
+        roadManager.addRequestOption("vehicle=car")
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val road = roadManager.getRoad(arrayListOf(startPoint, endPoint))
+                launch(Dispatchers.Main) {
+                    roadOverlay?.let { binding.map.overlays.remove(it) }
+                    if (road.mStatus == Road.STATUS_OK) {
+                        roadOverlay = RoadManager.buildRoadOverlay(road)
+                        roadOverlay?.outlinePaint?.color = Color.BLUE
+                        roadOverlay?.outlinePaint?.strokeWidth = 10f
+                        binding.map.overlays.add(roadOverlay)
+                        binding.map.invalidate()
+                    } else {
+                        Toast.makeText(requireContext(), "Lỗi vẽ đường đi: " + road.mStatus, Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                 launch(Dispatchers.Main) {
+                     Toast.makeText(requireContext(), "Không thể kết nối dịch vụ chỉ đường. Kiểm tra API Key và mạng.", Toast.LENGTH_LONG).show()
+                 }
+            }
+        }
     }
 
     private fun searchLocation(query: String, maxResults: Int) {

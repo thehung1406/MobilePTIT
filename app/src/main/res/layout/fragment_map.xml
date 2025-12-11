@@ -101,14 +101,30 @@
                     android:maxLines="2"
                     android:ellipsize="end"/>
                 
-                <TextView
-                    android:id="@+id/tv_view_detail"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:orientation="horizontal"
                     android:layout_marginTop="8dp"
-                    android:text="Xem chi tiết >"
-                    android:textColor="#0077FF"
-                    android:textStyle="bold"/>
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tv_view_detail"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Xem chi tiết >"
+                        android:textColor="#0077FF"
+                        android:textStyle="bold"/>
+
+                    <ImageButton
+                        android:id="@+id/btn_directions"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="24dp"
+                        android:background="?selectableItemBackgroundBorderless"
+                        android:src="@android:drawable/ic_menu_directions"
+                        app:tint="#0077FF" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Nút đóng -->

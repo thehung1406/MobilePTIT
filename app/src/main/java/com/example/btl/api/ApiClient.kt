@@ -5,7 +5,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
     // 10.0.2.2 là địa chỉ localhost của máy tính khi truy cập từ Android Emulator
-    private const val BASE_URL = "http://10.0.2.2:8000/"
+    private const val BASE_URL = "http://192.168.0.131:8000/"
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
