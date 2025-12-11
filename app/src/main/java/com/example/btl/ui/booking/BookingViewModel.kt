@@ -22,7 +22,6 @@ class BookingViewModel : ViewModel() {
     private val _roomType = MutableStateFlow<RoomTypeWithRooms?>(null)
     val roomType: StateFlow<RoomTypeWithRooms?> = _roomType.asStateFlow()
 
-    // ✅ FIX 1: Đổi từ AvailableRoomsResponse → List<AvailableRoom>
     private val _availableRooms = MutableStateFlow<List<AvailableRoom>>(emptyList())
     val availableRooms: StateFlow<List<AvailableRoom>> = _availableRooms.asStateFlow()
 
@@ -55,7 +54,6 @@ class BookingViewModel : ViewModel() {
         }
     }
 
-    // ✅ FIX 2: Sửa loadAvailableRooms
     fun loadAvailableRooms(
         roomTypeId: Int,
         checkin: String,
@@ -71,29 +69,25 @@ class BookingViewModel : ViewModel() {
                 // ✅ Lấy list availableRooms từ response
                 _availableRooms.value = response
                 
-                // Tự động chọn phòng nếu có đủ phòng trống
-                // selectRooms(1) // Tạm thời để user tự chọn hoặc logic khác xử lý
+                // Reset selected rooms khi load lại
+                _selectedRoomIds.value = emptyList()
             } catch (e: Exception) {
                 _error.value = "Lỗi tải phòng trống: ${e.message}"
             }
         }
     }
 
-    fun calculateTotalPrice(
-        roomTypePrice: Int,
-        numberOfNights: Int,
-        numberOfRooms: Int
-    ) {
-        _totalPrice.value = roomTypePrice * numberOfNights * numberOfRooms
+    // Cập nhật khi người dùng check/uncheck phòng
+    fun updateSelectedRooms(roomIds: List<Int>) {
+        _selectedRoomIds.value = roomIds
     }
 
-    // ✅ FIX 3: Sửa selectRooms
-    fun selectRooms(numberOfRooms: Int) {
-        val selectedIds = _availableRooms.value
-            .take(numberOfRooms)
-            .map { it.roomId }  // ✅ Đổi it.id → it.roomId
-
-        _selectedRoomIds.value = selectedIds
+    fun calculateTotalPrice(
+        roomTypePrice: Int,
+        numberOfNights: Int
+    ) {
+        val numberOfRooms = _selectedRoomIds.value.size
+        _totalPrice.value = roomTypePrice * numberOfNights * numberOfRooms
     }
 
     fun createBooking(

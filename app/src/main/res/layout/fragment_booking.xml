@@ -26,7 +26,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/back"
                 android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:tint="@android:color/white" />
+                app:tint="@android:color/white" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -269,48 +269,6 @@
 
                 </LinearLayout>
 
-                <!-- Number of Rooms -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Số phòng"
-                        android:textSize="14sp" />
-
-                    <Button
-                        android:id="@+id/decreaseRoomsButton"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:text="-"
-                        android:textSize="18sp"
-                        style="?android:attr/borderlessButtonStyle" />
-
-                    <TextView
-                        android:id="@+id/numberOfRoomsValue"
-                        android:layout_width="40dp"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        tools:text="1" />
-
-                    <Button
-                        android:id="@+id/increaseRoomsButton"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:text="+"
-                        android:textSize="18sp"
-                        style="?android:attr/borderlessButtonStyle" />
-
-                </LinearLayout>
-
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
@@ -323,7 +281,8 @@
             android:layout_margin="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
-            app:layout_constraintTop_toBottomOf="@+id/bookingDetailsCard">
+            app:layout_constraintTop_toBottomOf="@+id/bookingDetailsCard"
+            app:layout_constraintBottom_toTopOf="@+id/confirmBookingButton">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -338,11 +297,35 @@
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
+                <!-- Room Selection List -->
+                 <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Chọn phòng:"
+                    android:textStyle="bold"
+                    android:textSize="14sp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvAvailableRooms"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/item_room_checkbox"
+                    tools:itemCount="3"/>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="#E0E0E0" />
+
                 <!-- Price per night -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
                     android:orientation="horizontal">
 
                     <TextView
@@ -361,11 +344,12 @@
 
                 </LinearLayout>
 
-                <!-- Number of nights -->
+                <!-- Number of nights (EditText) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <TextView
@@ -375,16 +359,20 @@
                         android:text="Số đêm"
                         android:textSize="14sp" />
 
-                    <TextView
-                        android:id="@+id/numberOfNights"
-                        android:layout_width="wrap_content"
+                    <EditText
+                        android:id="@+id/edtNumberOfNights"
+                        android:layout_width="60dp"
                         android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:textAlignment="viewEnd"
                         android:textSize="14sp"
-                        tools:text="2 đêm" />
+                        android:text="1"
+                        android:padding="8dp"
+                        android:background="@android:drawable/edit_text" />
 
                 </LinearLayout>
 
-                <!-- Number of rooms -->
+                <!-- Number of rooms (Calculated) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -395,7 +383,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Số phòng"
+                        android:text="Số phòng đã chọn"
                         android:textSize="14sp" />
 
                     <TextView
@@ -403,7 +391,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="14sp"
-                        tools:text="1 phòng" />
+                        tools:text="0 phòng" />
 
                 </LinearLayout>
 
@@ -432,21 +420,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="14sp"
+                        android:textStyle="bold"
                         tools:text="3.000.000 VNĐ" />
 
                 </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginBottom="12dp"
-                    android:background="#E0E0E0" />
 
                 <!-- Total -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:orientation="horizontal">
 
                     <TextView
@@ -454,8 +437,9 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Tổng cộng"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black" />
 
                     <TextView
                         android:id="@+id/totalPrice"
@@ -472,20 +456,20 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Confirm Button -->
+        <!-- Confirm Booking Button -->
         <Button
             android:id="@+id/confirmBookingButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:backgroundTint="#4CAF50"
-            android:padding="16dp"
+            android:padding="12dp"
             android:text="Xác nhận đặt phòng"
             android:textSize="16sp"
-            android:textStyle="bold"
+            android:backgroundTint="#3F51B5"
             android:textColor="@android:color/white"
-            app:layout_constraintTop_toBottomOf="@+id/priceCard"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:cornerRadius="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/priceCard" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

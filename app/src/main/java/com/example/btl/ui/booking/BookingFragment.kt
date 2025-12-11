@@ -2,6 +2,8 @@ package com.example.btl.ui.booking
 
 import android.content.Context
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.btl.R
 import com.example.btl.databinding.FragmentBookingBinding
@@ -36,7 +39,8 @@ class BookingFragment : Fragment() {
     private var checkInDate: Long = 0
     private var checkOutDate: Long = 0
     private var numberOfGuests: Int = 2
-    private var numberOfRooms: Int = 1
+    
+    private lateinit var roomAdapter: AvailableRoomAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,7 +55,9 @@ class BookingFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         getArgumentsData()
+        setupRecyclerView()
         setupClickListeners()
+        setupPriceCalculation()
         observeViewModel()
 
         // Load booking info
@@ -62,7 +68,19 @@ class BookingFragment : Fragment() {
             val checkout = viewModel.formatDate(checkOutDate)
             viewModel.loadAvailableRooms(roomTypeId, checkin, checkout)
 
+            // Tính giá ban đầu (0 phòng)
             calculateAndDisplayPrice()
+        }
+    }
+    
+    private fun setupRecyclerView() {
+        roomAdapter = AvailableRoomAdapter { selectedIds ->
+            viewModel.updateSelectedRooms(selectedIds)
+            calculateAndDisplayPrice()
+        }
+        binding.rvAvailableRooms.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = roomAdapter
         }
     }
 
@@ -75,8 +93,21 @@ class BookingFragment : Fragment() {
             checkInDate = it.getLong("checkInDate", System.currentTimeMillis())
             checkOutDate = it.getLong("checkOutDate", System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1))
             numberOfGuests = it.getInt("numberOfGuests", 2)
-            numberOfRooms = it.getInt("numberOfRooms", 1)
         }
+    }
+    
+    private fun setupPriceCalculation() {
+        // Set initial value for number of nights
+        val initialNights = TimeUnit.MILLISECONDS.toDays(checkOutDate - checkInDate).toInt().coerceAtLeast(1)
+        binding.edtNumberOfNights.setText(initialNights.toString())
+        
+        binding.edtNumberOfNights.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                calculateAndDisplayPrice()
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
     }
 
     private fun setupClickListeners() {
@@ -88,31 +119,6 @@ class BookingFragment : Fragment() {
         // Confirm booking button
         binding.confirmBookingButton.setOnClickListener {
             confirmBooking()
-        }
-
-        // Increase/Decrease rooms
-        binding.decreaseRoomsButton?.setOnClickListener {
-            if (numberOfRooms > 1) {
-                numberOfRooms--
-                updateRoomsDisplay()
-                calculateAndDisplayPrice()
-
-                val checkin = viewModel.formatDate(checkInDate)
-                val checkout = viewModel.formatDate(checkOutDate)
-                viewModel.loadAvailableRooms(roomTypeId, checkin, checkout)
-            }
-        }
-
-        binding.increaseRoomsButton?.setOnClickListener {
-            if (numberOfRooms < 5) { // Max 5 rooms
-                numberOfRooms++
-                updateRoomsDisplay()
-                calculateAndDisplayPrice()
-
-                val checkin = viewModel.formatDate(checkInDate)
-                val checkout = viewModel.formatDate(checkOutDate)
-                viewModel.loadAvailableRooms(roomTypeId, checkin, checkout)
-            }
         }
 
         // Increase/Decrease guests
@@ -130,23 +136,32 @@ class BookingFragment : Fragment() {
             }
         }
     }
+    
+    private fun getNightsFromInput(): Int {
+        return try {
+            val text = binding.edtNumberOfNights.text.toString()
+            if (text.isEmpty()) 0 else text.toInt()
+        } catch (e: NumberFormatException) {
+            0
+        }
+    }
 
     private fun calculateAndDisplayPrice() {
-        val nights = TimeUnit.MILLISECONDS.toDays(checkOutDate - checkInDate).toInt()
-        val total = roomTypePrice * nights * numberOfRooms
+        val nights = getNightsFromInput()
+        val selectedCount = viewModel.selectedRoomIds.value.size
+        
+        val total = roomTypePrice * nights * selectedCount
 
         binding.roomTypePrice?.text = "${formatPrice(roomTypePrice)} / đêm"
-        binding.numberOfNights?.text = "$nights đêm"
-        binding.numberOfRoomsText?.text = "$numberOfRooms phòng"
-        binding.subtotalPrice?.text = formatPrice(roomTypePrice * nights)
+        binding.numberOfRoomsText?.text = "$selectedCount phòng"
+        binding.subtotalPrice?.text = formatPrice(roomTypePrice * nights * selectedCount)
         binding.totalPrice?.text = formatPrice(total)
-
-        viewModel.calculateTotalPrice(roomTypePrice, nights, numberOfRooms)
+        
+        // Cập nhật ngày check-out ảo dựa trên số đêm mới nhập (chỉ để hiển thị nếu cần, hoặc cập nhật logic)
+        // Hiện tại chỉ update giá tiền
+        viewModel.calculateTotalPrice(roomTypePrice, nights)
     }
 
-    private fun updateRoomsDisplay() {
-        binding.numberOfRoomsValue?.text = numberOfRooms.toString()
-    }
 
     private fun updateGuestsDisplay() {
         binding.numberOfGuestsValue?.text = numberOfGuests.toString()
@@ -154,19 +169,16 @@ class BookingFragment : Fragment() {
 
     private fun confirmBooking() {
         val selectedRoomIds = viewModel.selectedRoomIds.value
+        val nights = getNightsFromInput()
 
         // Validate selected rooms
         if (selectedRoomIds.isEmpty()) {
-            Toast.makeText(requireContext(), "Không có phòng trống", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Vui lòng chọn ít nhất 1 phòng", Toast.LENGTH_SHORT).show()
             return
         }
-
-        if (selectedRoomIds.size < numberOfRooms) {
-            Toast.makeText(
-                requireContext(),
-                "Chỉ còn ${selectedRoomIds.size} phòng trống",
-                Toast.LENGTH_SHORT
-            ).show()
+        
+        if (nights <= 0) {
+             Toast.makeText(requireContext(), "Số đêm phải lớn hơn 0", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -177,10 +189,9 @@ class BookingFragment : Fragment() {
                 Bạn có chắc muốn đặt phòng với thông tin sau?
                 
                 Loại phòng: $roomTypeName
-                Số phòng: $numberOfRooms
+                Số phòng: ${selectedRoomIds.size}
                 Số khách: $numberOfGuests
-                Check-in: ${formatDateDisplay(checkInDate)}
-                Check-out: ${formatDateDisplay(checkOutDate)}
+                Số đêm: $nights
                 Tổng tiền: ${formatPrice(viewModel.totalPrice.value)}
             """.trimIndent())
             .setPositiveButton("Xác nhận") { _, _ ->
@@ -192,8 +203,13 @@ class BookingFragment : Fragment() {
 
     private fun processBooking() {
         val selectedRoomIds = viewModel.selectedRoomIds.value
+        val nights = getNightsFromInput()
+        
+        // Tính lại checkout date dựa trên số đêm user nhập
+        val newCheckOutDate = checkInDate + TimeUnit.DAYS.toMillis(nights.toLong())
+        
         val checkIn = viewModel.formatDate(checkInDate)
-        val checkOut = viewModel.formatDate(checkOutDate)
+        val checkOut = viewModel.formatDate(newCheckOutDate)
 
         // Get token from SharedPreferences
         val prefs = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
@@ -272,11 +288,10 @@ class BookingFragment : Fragment() {
                 launch {
                     viewModel.availableRooms.collect { rooms ->
                         binding.availableRoomsCount?.text = "${rooms.size} phòng còn trống"
+                        roomAdapter.submitList(rooms)
 
-
-                        // Hiển thị warning nếu không đủ phòng
-                        if (rooms.size < numberOfRooms) {
-                            binding.availableRoomsCount?.setTextColor(
+                        if (rooms.isEmpty()) {
+                             binding.availableRoomsCount?.setTextColor(
                                 resources.getColor(android.R.color.holo_red_dark, null)
                             )
                         } else {
@@ -303,7 +318,6 @@ class BookingFragment : Fragment() {
         binding.checkInDate?.text = formatDateDisplay(checkInDate)
         binding.checkOutDate?.text = formatDateDisplay(checkOutDate)
         binding.numberOfGuestsValue?.text = numberOfGuests.toString()
-        binding.numberOfRoomsValue?.text = numberOfRooms.toString()
     }
 
     private fun showBookingSuccess(response: com.example.btl.model.BookingResponse) {
