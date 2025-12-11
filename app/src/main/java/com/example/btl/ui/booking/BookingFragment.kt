@@ -12,6 +12,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavOptions
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -149,14 +150,14 @@ class BookingFragment : Fragment() {
     }
 
     private fun confirmBooking() {
-        val selectedRoomIds = viewModel.selectedRoomIds.value
-        val nights = getCalculatedNights()
+        val validSelectedRoomIds = viewModel.selectedRoomIds.value.filter { it > 0 }
 
-        // Validate selected rooms
-        if (selectedRoomIds.isEmpty()) {
-            Toast.makeText(requireContext(), "Vui lòng chọn ít nhất 1 phòng", Toast.LENGTH_SHORT).show()
+        if (validSelectedRoomIds.isEmpty()) {
+            Toast.makeText(requireContext(), "Vui lòng chọn ít nhất 1 phòng.", Toast.LENGTH_SHORT).show()
             return
         }
+
+        val nights = getCalculatedNights()
 
         // Show confirmation dialog
         AlertDialog.Builder(requireContext())
@@ -165,7 +166,7 @@ class BookingFragment : Fragment() {
                 Bạn có chắc muốn đặt phòng với thông tin sau?
                 
                 Loại phòng: $roomTypeName
-                Số phòng: ${selectedRoomIds.size}
+                Số phòng: ${validSelectedRoomIds.size}
                 Số khách: $numberOfGuests
                 Số đêm: $nights
                 Tổng tiền: ${formatPrice(viewModel.totalPrice.value)}
@@ -178,20 +179,33 @@ class BookingFragment : Fragment() {
     }
 
     private fun processBooking() {
-        val selectedRoomIds = viewModel.selectedRoomIds.value
-        
-        val checkIn = viewModel.formatDate(checkInDate)
-        val checkOut = viewModel.formatDate(checkOutDate)
+        val validSelectedRoomIds = viewModel.selectedRoomIds.value.filter { it > 0 }
+        if (validSelectedRoomIds.isEmpty()) {
+            Toast.makeText(requireContext(), "Không có phòng hợp lệ nào được chọn.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val checkInString = viewModel.formatDate(checkInDate)
+
+        // Calculate correct checkout date, ensuring at least one night.
+        val nights = getCalculatedNights()
+        val finalCheckOutDateTime = checkInDate + TimeUnit.DAYS.toMillis(nights.toLong())
+        val checkOutString = viewModel.formatDate(finalCheckOutDateTime)
 
         // Get token from SharedPreferences
-        val prefs = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        val token = prefs.getString("auth_token", "") ?: ""
+        val prefs = requireContext().getSharedPreferences("BTL_PREFS", Context.MODE_PRIVATE)
+        val token = prefs.getString("ACCESS_TOKEN", "") ?: ""
+
+        if (token.isEmpty()) {
+            Toast.makeText(requireContext(), "Lỗi xác thực. Vui lòng đăng nhập lại.", Toast.LENGTH_LONG).show()
+            return
+        }
 
         viewModel.createBooking(
             token = token,
-            roomIds = selectedRoomIds,
-            checkInDate = checkIn,
-            checkOutDate = checkOut,
+            roomIds = validSelectedRoomIds,
+            checkInDate = checkInString,
+            checkOutDate = checkOutString,
             numGuests = numberOfGuests
         )
     }
@@ -304,8 +318,11 @@ class BookingFragment : Fragment() {
                 📧 Kiểm tra email để nhận thông tin chi tiết.
             """.trimIndent())
             .setPositiveButton("Xem lịch sử đặt phòng") { _, _ ->
-                // TODO: Navigate to booking history
-                findNavController().navigateUp()
+                // Điều hướng sang Fragment Trips
+                val navOptions = NavOptions.Builder()
+                    .setPopUpTo(R.id.bookingFragment, true)
+                    .build()
+                findNavController().navigate(R.id.tripsFragment, null, navOptions)
             }
             .setNegativeButton("Đóng") { _, _ ->
                 findNavController().navigateUp()

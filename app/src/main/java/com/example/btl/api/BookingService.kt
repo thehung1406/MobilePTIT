@@ -1,36 +1,35 @@
 package com.example.btl.api
 
-import com.example.btl.model.*
-import retrofit2.http.*
+import com.example.btl.model.BookingRequest
+import com.example.btl.model.BookingResponse
+import com.example.btl.model.CancelBookingResponse
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface BookingService {
 
     /**
      * POST /booking
      * Tạo booking mới
-     * Body: {
-     *   "room_ids": [1, 2],
-     *   "checkin": "2025-12-13",
-     *   "checkout": "2025-12-15",
-     *   "num_guests": 2
-     * }
      */
     @POST("booking")
     suspend fun createBooking(
         @Header("Authorization") token: String,
         @Body request: BookingRequest
     ): BookingResponse
-
+    
     /**
      * GET /booking/my
-     * Lấy danh sách booking của user hiện tại
-     * Requires: Authorization header with Bearer token
+     * Lấy danh sách booking của user
      */
     @GET("booking/my")
     suspend fun getMyBookings(
         @Header("Authorization") token: String
-    ): List<Booking>
-
+    ): List<BookingResponse>
+    
     /**
      * POST /booking/{booking_id}/cancel
      * Hủy booking

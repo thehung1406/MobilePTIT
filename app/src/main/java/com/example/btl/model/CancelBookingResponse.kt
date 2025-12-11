@@ -1,4 +1,8 @@
 package com.example.btl.model
 
-class CancelBookingResponse {
-}
+import com.google.gson.annotations.SerializedName
+
+data class CancelBookingResponse(
+    @SerializedName("message")
+    val message: String
+)
