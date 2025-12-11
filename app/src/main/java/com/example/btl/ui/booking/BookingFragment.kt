@@ -2,8 +2,6 @@ package com.example.btl.ui.booking
 
 import android.content.Context
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -57,7 +55,11 @@ class BookingFragment : Fragment() {
         getArgumentsData()
         setupRecyclerView()
         setupClickListeners()
-        setupPriceCalculation()
+        
+        // Hiển thị số đêm (readonly)
+        val nights = TimeUnit.MILLISECONDS.toDays(checkOutDate - checkInDate).toInt().coerceAtLeast(1)
+        binding.numberOfNights.text = "$nights đêm"
+
         observeViewModel()
 
         // Load booking info
@@ -95,20 +97,6 @@ class BookingFragment : Fragment() {
             numberOfGuests = it.getInt("numberOfGuests", 2)
         }
     }
-    
-    private fun setupPriceCalculation() {
-        // Set initial value for number of nights
-        val initialNights = TimeUnit.MILLISECONDS.toDays(checkOutDate - checkInDate).toInt().coerceAtLeast(1)
-        binding.edtNumberOfNights.setText(initialNights.toString())
-        
-        binding.edtNumberOfNights.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-                calculateAndDisplayPrice()
-            }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
-    }
 
     private fun setupClickListeners() {
         // Back button
@@ -137,17 +125,12 @@ class BookingFragment : Fragment() {
         }
     }
     
-    private fun getNightsFromInput(): Int {
-        return try {
-            val text = binding.edtNumberOfNights.text.toString()
-            if (text.isEmpty()) 0 else text.toInt()
-        } catch (e: NumberFormatException) {
-            0
-        }
+    private fun getCalculatedNights(): Int {
+        return TimeUnit.MILLISECONDS.toDays(checkOutDate - checkInDate).toInt().coerceAtLeast(1)
     }
 
     private fun calculateAndDisplayPrice() {
-        val nights = getNightsFromInput()
+        val nights = getCalculatedNights()
         val selectedCount = viewModel.selectedRoomIds.value.size
         
         val total = roomTypePrice * nights * selectedCount
@@ -157,8 +140,6 @@ class BookingFragment : Fragment() {
         binding.subtotalPrice?.text = formatPrice(roomTypePrice * nights * selectedCount)
         binding.totalPrice?.text = formatPrice(total)
         
-        // Cập nhật ngày check-out ảo dựa trên số đêm mới nhập (chỉ để hiển thị nếu cần, hoặc cập nhật logic)
-        // Hiện tại chỉ update giá tiền
         viewModel.calculateTotalPrice(roomTypePrice, nights)
     }
 
@@ -169,16 +150,11 @@ class BookingFragment : Fragment() {
 
     private fun confirmBooking() {
         val selectedRoomIds = viewModel.selectedRoomIds.value
-        val nights = getNightsFromInput()
+        val nights = getCalculatedNights()
 
         // Validate selected rooms
         if (selectedRoomIds.isEmpty()) {
             Toast.makeText(requireContext(), "Vui lòng chọn ít nhất 1 phòng", Toast.LENGTH_SHORT).show()
-            return
-        }
-        
-        if (nights <= 0) {
-             Toast.makeText(requireContext(), "Số đêm phải lớn hơn 0", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -203,13 +179,9 @@ class BookingFragment : Fragment() {
 
     private fun processBooking() {
         val selectedRoomIds = viewModel.selectedRoomIds.value
-        val nights = getNightsFromInput()
-        
-        // Tính lại checkout date dựa trên số đêm user nhập
-        val newCheckOutDate = checkInDate + TimeUnit.DAYS.toMillis(nights.toLong())
         
         val checkIn = viewModel.formatDate(checkInDate)
-        val checkOut = viewModel.formatDate(newCheckOutDate)
+        val checkOut = viewModel.formatDate(checkOutDate)
 
         // Get token from SharedPreferences
         val prefs = requireContext().getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
