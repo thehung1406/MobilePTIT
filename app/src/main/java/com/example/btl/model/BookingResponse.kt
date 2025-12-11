@@ -11,9 +11,9 @@ data class BookingResponse(
 
     @SerializedName("selected_rooms")
     val selectedRooms: List<Int>?,
-    
+
     // Support legacy/alternative format just in case
-    @SerializedName("rooms") 
+    @SerializedName("rooms")
     val rooms: List<BookingRoom>?,
 
     @SerializedName("checkin")
@@ -32,15 +32,18 @@ data class BookingResponse(
     val expiresAt: String?,
 
     @SerializedName("status")
-    val status: String?
+    val status: String?,
+
+    @SerializedName("amount")
+    val amount: Int?
 ) {
-    val bookingId: Int 
+    val bookingId: Int
         get() = id ?: bookingIdAlt ?: 0
 
     // Helper to get displayable checkin/checkout
     val displayCheckin: String?
         get() = checkin ?: rooms?.firstOrNull()?.checkin
-        
+
     val displayCheckout: String?
         get() = checkout ?: rooms?.firstOrNull()?.checkout
 }

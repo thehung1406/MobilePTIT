@@ -156,7 +156,8 @@ class BookingViewModel : ViewModel() {
             requestAt = null,
             bookingDate = null,
             status = "PENDING (Check History)",
-            expiresAt = "Vui lòng kiểm tra lịch sử"
+            expiresAt = "Vui lòng kiểm tra lịch sử",
+            amount = null
         )
     }
 

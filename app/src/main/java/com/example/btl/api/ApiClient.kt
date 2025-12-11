@@ -37,4 +37,8 @@ object ApiClient {
     val bookingService: BookingService by lazy {
         retrofit.create(BookingService::class.java)
     }
+    
+    val paymentService: PaymentService by lazy {
+        retrofit.create(PaymentService::class.java)
+    }
 }

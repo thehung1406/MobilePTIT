@@ -53,17 +53,30 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvRoomName"
             tools:text="15/05/2023 - 17/05/2023" />
-            
+
+        <TextView
+            android:id="@+id/tvAmount"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/holo_red_light"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvDate"
+            tools:text="Tổng tiền: 1.500.000 VNĐ" />
+
         <TextView
             android:id="@+id/tvExpiresAt"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-             android:textColor="@android:color/holo_red_dark"
-             android:visibility="gone"
+            android:textColor="@android:color/holo_red_dark"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvDate"
+            app:layout_constraintTop_toBottomOf="@+id/tvAmount"
             tools:text="Hết hạn: 15/05/2023 12:00" />
 
         <LinearLayout
