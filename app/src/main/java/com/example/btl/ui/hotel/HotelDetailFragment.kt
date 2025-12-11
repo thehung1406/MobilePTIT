@@ -17,6 +17,7 @@ import com.bumptech.glide.Glide
 import com.example.btl.R
 import com.example.btl.adapter.RoomTypeAdapter
 import com.example.btl.databinding.FragmentHotelDetailBinding
+import com.example.btl.model.Property
 import kotlinx.coroutines.launch
 
 class HotelDetailFragment : Fragment() {
@@ -32,6 +33,9 @@ class HotelDetailFragment : Fragment() {
     private var checkOutDate: Long = 0
     private var numberOfGuests: Int = 2
     private var numberOfRooms: Int = 1
+    
+    // Lưu thông tin khách sạn hiện tại
+    private var currentProperty: Property? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,7 +61,6 @@ class HotelDetailFragment : Fragment() {
         observeViewModel()
 
         if (propertyId > 0) {
-            // ✅ Truyền thêm check-in/out dates
             viewModel.loadPropertyDetail(propertyId, checkInDate, checkOutDate)
         } else {
             Toast.makeText(requireContext(), "Lỗi: Không tìm thấy ID khách sạn", Toast.LENGTH_SHORT).show()
@@ -98,7 +101,20 @@ class HotelDetailFragment : Fragment() {
         }
 
         binding.viewMapButton?.setOnClickListener {
-            Toast.makeText(requireContext(), "Xem bản đồ", Toast.LENGTH_SHORT).show()
+            currentProperty?.let { property ->
+                if (property.latitude != null && property.longitude != null) {
+                    val bundle = Bundle().apply {
+                        putDouble("latitude", property.latitude)
+                        putDouble("longitude", property.longitude)
+                        putString("propertyName", property.name)
+                    }
+                    findNavController().navigate(R.id.action_hotelDetailFragment_to_mapFragment, bundle)
+                } else {
+                    Toast.makeText(requireContext(), "Vị trí của khách sạn này chưa được cập nhật.", Toast.LENGTH_SHORT).show()
+                }
+            } ?: run {
+                Toast.makeText(requireContext(), "Chưa tải được thông tin khách sạn.", Toast.LENGTH_SHORT).show()
+            }
         }
 
         binding.callButton?.setOnClickListener {
@@ -113,15 +129,13 @@ class HotelDetailFragment : Fragment() {
                 // Observe property details
                 launch {
                     viewModel.property.collect { property ->
-                        // ✅ LOG để debug
+                        currentProperty = property
                         Log.d("HotelDetailFragment", "Property received: ${property?.name}")
 
                         property?.let {
-                            // ✅ Hiển thị thông tin cơ bản
                             binding.hotelName?.text = it.name
                             binding.hotelAddress?.text = it.address
 
-                            // ✅ Xử lý description
                             val description = it.description
                             Log.d("HotelDetailFragment", "Description: '$description'")
 
@@ -130,10 +144,9 @@ class HotelDetailFragment : Fragment() {
                                     description.isNullOrBlank() -> "Thông tin mô tả đang được cập nhật..."
                                     else -> description
                                 }
-                                visibility = View.VISIBLE // ✅ FORCE VISIBLE
+                                visibility = View.VISIBLE
                             }
 
-                            // ✅ Xử lý check-in/out time
                             binding.checkInTime?.apply {
                                 text = if (it.checkin.isNullOrBlank()) "14:00" else "Nhận phòng: ${it.checkin}"
                                 visibility = View.VISIBLE
@@ -144,7 +157,6 @@ class HotelDetailFragment : Fragment() {
                                 visibility = View.VISIBLE
                             }
 
-                            // ✅ Load image
                             Glide.with(requireContext())
                                 .load(it.image)
                                 .placeholder(android.R.drawable.ic_menu_gallery)

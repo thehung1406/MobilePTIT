@@ -49,9 +49,10 @@ class MapFragment : Fragment() {
     private var searchMarker: Marker? = null
     private var searchJob: Job? = null
     private lateinit var suggestionAdapter: SuggestionAdapter
-    
-    // Biến lưu khách sạn đang được chọn
     private var currentSelectedProperty: Property? = null
+
+    // Cờ để kiểm tra vị trí ban đầu đã được set chưa
+    private var initialLocationSet = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -76,20 +77,17 @@ class MapFragment : Fragment() {
                 binding.map.controller.animateTo(locationOverlay.myLocation)
             }
         }
-        
-        // Xử lý nút đóng CardView thông tin
+
         binding.btnCloseInfo.setOnClickListener {
             binding.propertyInfoCard.visibility = View.GONE
             currentSelectedProperty = null
         }
-        
-        // Xử lý click vào "Xem chi tiết" -> Chuyển sang HotelDetailFragment
+
         binding.tvViewDetail.setOnClickListener {
             currentSelectedProperty?.let { property ->
                 val bundle = Bundle().apply {
                     putInt("propertyId", property.id)
                     putString("propertyName", property.name)
-                    // Có thể thêm các tham số khác nếu cần thiết (ví dụ ngày checkin mặc định)
                 }
                 findNavController().navigate(R.id.action_mapFragment_to_hotelDetailFragment, bundle)
             } ?: run {
@@ -111,8 +109,8 @@ class MapFragment : Fragment() {
                 searchJob?.cancel()
                 if (!newText.isNullOrBlank()) {
                     searchJob = lifecycleScope.launch {
-                        delay(300) // Debounce
-                        searchLocation(newText, 5) // Get up to 5 suggestions
+                        delay(300)
+                        searchLocation(newText, 5)
                     }
                 } else {
                     binding.suggestionsRecyclerView.visibility = View.GONE
@@ -120,13 +118,27 @@ class MapFragment : Fragment() {
                 return true
             }
         })
+
+        // Nhận tọa độ từ HotelDetailFragment
+        val lat = arguments?.getDouble("latitude", 0.0) ?: 0.0
+        val lon = arguments?.getDouble("longitude", 0.0) ?: 0.0
+        val name = arguments?.getString("propertyName")
+
+        if (lat != 0.0 && lon != 0.0) {
+            initialLocationSet = true // Đánh dấu đã set vị trí
+            binding.map.post {
+                val point = GeoPoint(lat, lon)
+                binding.map.controller.setCenter(point)
+                binding.map.controller.setZoom(18.0)
+                addSingleMarker(point, name ?: "Địa điểm đã chọn")
+            }
+        }
     }
 
     private fun setupRecyclerView() {
         suggestionAdapter = SuggestionAdapter { address ->
             binding.searchView.setQuery(address.getAddressLine(0), true)
             binding.suggestionsRecyclerView.visibility = View.GONE
-            // Khi chọn gợi ý từ list, thực hiện search để pin marker
             searchLocation(address.getAddressLine(0), 1)
         }
         binding.suggestionsRecyclerView.apply {
@@ -141,7 +153,6 @@ class MapFragment : Fragment() {
         binding.map.setTileSource(TileSourceFactory.MAPNIK)
         binding.map.setMultiTouchControls(true)
 
-        // Enable rotation gesture
         val rotationGestureOverlay = RotationGestureOverlay(binding.map)
         rotationGestureOverlay.isEnabled = true
         binding.map.overlays.add(rotationGestureOverlay)
@@ -152,9 +163,12 @@ class MapFragment : Fragment() {
         binding.map.overlays.add(locationOverlay)
 
         locationOverlay.runOnFirstFix {
-            activity?.runOnUiThread {
-                binding.map.controller.setCenter(locationOverlay.myLocation)
-                binding.map.controller.animateTo(locationOverlay.myLocation)
+            // Chỉ di chuyển đến vị trí người dùng nếu chưa có vị trí nào được set
+            if (!initialLocationSet) {
+                activity?.runOnUiThread {
+                    binding.map.controller.setCenter(locationOverlay.myLocation)
+                    binding.map.controller.animateTo(locationOverlay.myLocation)
+                }
             }
         }
     }
@@ -164,8 +178,8 @@ class MapFragment : Fragment() {
         mapViewModel.properties.observe(viewLifecycleOwner) {
             drawPropertyMarkers(it)
         }
-        mapViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            // Có thể thêm loading indicator
+        mapViewModel.isLoading.observe(viewLifecycleOwner) {
+            // Handle loading state
         }
         mapViewModel.errorMessage.observe(viewLifecycleOwner) { error ->
             error?.let {
@@ -181,39 +195,48 @@ class MapFragment : Fragment() {
                 marker.position = GeoPoint(property.latitude, property.longitude)
                 marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                 marker.title = property.name
-                
-                // Lưu đối tượng Property vào relatedObject của marker
                 marker.relatedObject = property
 
                 marker.setOnMarkerClickListener { clickedMarker, _ ->
                     val clickedProperty = clickedMarker.relatedObject as? Property
                     clickedProperty?.let { showPropertyInfo(it) }
-                    true // Return true to indicate we handled the click
+                    true
                 }
                 binding.map.overlays.add(marker)
             }
         }
-        binding.map.invalidate() // Redraw the map
+        binding.map.invalidate()
     }
-    
+
     private fun showPropertyInfo(property: Property) {
-        // Lưu property hiện tại để dùng cho nút "Xem chi tiết"
         currentSelectedProperty = property
 
         binding.propertyInfoCard.visibility = View.VISIBLE
         binding.tvPropertyName.text = property.name
         binding.tvPropertyAddress.text = property.address
-        
-        // Load ảnh dùng Glide (Nếu có url ảnh)
+
         if (!property.image.isNullOrEmpty()) {
             Glide.with(this)
                 .load(property.image)
-                .placeholder(R.drawable.ic_launcher_background) // Ảnh mặc định
+                .placeholder(R.drawable.ic_launcher_background)
                 .error(R.drawable.ic_launcher_background)
                 .into(binding.imgProperty)
         } else {
-             binding.imgProperty.setImageResource(R.drawable.ic_launcher_background)
+            binding.imgProperty.setImageResource(R.drawable.ic_launcher_background)
         }
+    }
+
+    private fun addSingleMarker(geoPoint: GeoPoint, title: String) {
+        searchMarker?.let {
+            binding.map.overlays.remove(it)
+        }
+
+        searchMarker = Marker(binding.map)
+        searchMarker?.position = geoPoint
+        searchMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        searchMarker?.title = title
+        binding.map.overlays.add(searchMarker)
+        binding.map.invalidate()
     }
 
     private fun searchLocation(query: String, maxResults: Int) {
@@ -232,19 +255,7 @@ class MapFragment : Fragment() {
                             val address = addresses[0]
                             val geoPoint = GeoPoint(address.latitude, address.longitude)
 
-                            // Remove previous marker
-                            searchMarker?.let {
-                                binding.map.overlays.remove(it)
-                            }
-
-                            // Add new marker
-                            searchMarker = Marker(binding.map)
-                            searchMarker?.position = geoPoint
-                            searchMarker?.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                            searchMarker?.title = address.getAddressLine(0)
-                            binding.map.overlays.add(searchMarker)
-
-                            // Animate to the new location
+                            addSingleMarker(geoPoint, address.getAddressLine(0))
                             binding.map.controller.animateTo(geoPoint)
                         } else {
                             Toast.makeText(requireContext(), "Không tìm thấy địa điểm.", Toast.LENGTH_SHORT).show()
