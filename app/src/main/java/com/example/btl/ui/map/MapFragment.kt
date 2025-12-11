@@ -223,6 +223,8 @@ class MapFragment : Fragment() {
         binding.propertyInfoCard.visibility = View.VISIBLE
         binding.tvPropertyName.text = property.name
         binding.tvPropertyAddress.text = property.address
+
+        binding.btnDirections.isEnabled = true // Bật lại nút khi chọn ks mới
         
         if (!property.image.isNullOrEmpty()) {
             Glide.with(this)
@@ -264,10 +266,11 @@ class MapFragment : Fragment() {
             return
         }
 
+        binding.btnDirections.isEnabled = false // Vô hiệu hóa nút
+
         val startPoint = myLocation
         val endPoint = GeoPoint(property.latitude, property.longitude)
         
-        // TODO: Thay YOUR_API_KEY bằng API Key của bạn lấy từ https://www.graphhopper.com/dashboard/#/register
         val roadManager: RoadManager = GraphHopperRoadManager("2e85400a-44aa-4322-a886-f1b0c22e3c97", false)
         roadManager.addRequestOption("vehicle=car")
 
@@ -275,6 +278,7 @@ class MapFragment : Fragment() {
             try {
                 val road = roadManager.getRoad(arrayListOf(startPoint, endPoint))
                 launch(Dispatchers.Main) {
+                    // Không bật lại nút ở đây nữa
                     roadOverlay?.let { binding.map.overlays.remove(it) }
                     if (road.mStatus == Road.STATUS_OK) {
                         roadOverlay = RoadManager.buildRoadOverlay(road)
@@ -284,11 +288,13 @@ class MapFragment : Fragment() {
                         binding.map.invalidate()
                     } else {
                         Toast.makeText(requireContext(), "Lỗi vẽ đường đi: " + road.mStatus, Toast.LENGTH_LONG).show()
+                        binding.btnDirections.isEnabled = true // Bật lại nếu có lỗi
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                  launch(Dispatchers.Main) {
+                     binding.btnDirections.isEnabled = true // Bật lại nếu có lỗi
                      Toast.makeText(requireContext(), "Không thể kết nối dịch vụ chỉ đường. Kiểm tra API Key và mạng.", Toast.LENGTH_LONG).show()
                  }
             }
