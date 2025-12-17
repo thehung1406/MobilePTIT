@@ -2,10 +2,13 @@ package com.example.btl.api
 
 import com.example.btl.model.LoginResponse
 import com.example.btl.model.RegisterRequest
+import com.example.btl.model.UserProfile
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
+import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface AuthService {
@@ -22,4 +25,7 @@ interface AuthService {
         @Field("client_id") clientId: String? = null,
         @Field("client_secret") clientSecret: String? = null
     ): Call<LoginResponse>
+
+    @GET("auth/me")
+    fun getProfile(@Header("Authorization") token: String): Call<UserProfile>
 }
