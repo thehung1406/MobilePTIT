@@ -22,25 +22,53 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Mã đặt phòng: #12345" />
 
-        <TextView
-            android:id="@+id/tvStatus"
+        <LinearLayout
+            android:id="@+id/status_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/holo_green_dark"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="CONFIRMED" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/holo_green_dark"
+                tools:text="CONFIRMED" />
+
+            <Chronometer
+                android:id="@+id/countdownTimer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textColor="@android:color/holo_red_dark"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvHotelName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvBookingId"
+            tools:text="Tên khách sạn" />
 
         <TextView
             android:id="@+id/tvRoomName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:textSize="16sp"
-            android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvBookingId"
+            app:layout_constraintTop_toBottomOf="@+id/tvHotelName"
             tools:text="Deluxe Room" />
 
         <TextView
@@ -51,7 +79,7 @@
             android:textColor="@android:color/darker_gray"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvRoomName"
+            app:layout_constraintTop_toBottomOf="@id/tvRoomName"
             tools:text="15/05/2023 - 17/05/2023" />
 
         <TextView
@@ -59,12 +87,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_red_light"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="@android:color/holo_red_light"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvDate"
+            app:layout_constraintTop_toBottomOf="@id/tvDate"
             tools:text="Tổng tiền: 1.500.000 VNĐ" />
 
         <TextView
@@ -76,7 +104,7 @@
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvAmount"
+            app:layout_constraintTop_toBottomOf="@id/tvAmount"
             tools:text="Hết hạn: 15/05/2023 12:00" />
 
         <LinearLayout
@@ -86,7 +114,7 @@
             android:layout_marginTop="12dp"
             android:orientation="horizontal"
             android:weightSum="2"
-            app:layout_constraintTop_toBottomOf="@+id/tvExpiresAt">
+            app:layout_constraintTop_toBottomOf="@id/tvExpiresAt">
 
             <Button
                 android:id="@+id/btnCancel"

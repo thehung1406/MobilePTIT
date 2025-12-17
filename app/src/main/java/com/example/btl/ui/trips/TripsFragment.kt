@@ -22,7 +22,7 @@ class TripsFragment : Fragment() {
 
     private var _binding: FragmentTripsBinding? = null
     private val binding get() = _binding!!
-    
+
     private lateinit var tripsAdapter: TripsAdapter
     private var allBookings = listOf<BookingResponse>()
 
@@ -40,13 +40,13 @@ class TripsFragment : Fragment() {
 
         setupRecyclerView()
         setupTabLayout()
-        
+
         // Hide FAB as requested by user context (focus on displaying items)
         binding.fabAddBooking.visibility = View.GONE
-        
+
         loadMyBookings()
     }
-    
+
     private fun setupRecyclerView() {
         tripsAdapter = TripsAdapter(
             bookings = emptyList(),
@@ -55,15 +55,18 @@ class TripsFragment : Fragment() {
             },
             onPayClick = { booking ->
                 processPayment(booking)
+            },
+            onCountdownFinish = { booking ->
+                cancelBooking(booking, isAuto = true)
             }
         )
-        
+
         binding.hotelsRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = tripsAdapter
         }
     }
-    
+
     private fun setupTabLayout() {
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
@@ -74,35 +77,35 @@ class TripsFragment : Fragment() {
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })
     }
-    
+
     private fun loadMyBookings() {
         val prefs = requireContext().getSharedPreferences("BTL_PREFS", Context.MODE_PRIVATE)
         val token = prefs.getString("ACCESS_TOKEN", "") ?: ""
-        
+
         if (token.isEmpty()) {
             binding.emptyView.text = "Vui lòng đăng nhập để xem đơn đặt phòng"
             binding.emptyView.visibility = View.VISIBLE
             binding.hotelsRecyclerView.visibility = View.GONE
             return
         }
-        
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                // Show loading? 
-                
+                // Show loading?
+
                 val response = ApiClient.bookingService.getMyBookings("Bearer $token")
                 allBookings = response
-                
+
                 // Filter based on current tab
                 filterBookings(binding.tabLayout.selectedTabPosition)
-                
+
             } catch (e: Exception) {
                 Log.e("TripsFragment", "Error loading bookings", e)
                 Toast.makeText(requireContext(), "Lỗi tải danh sách: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
-    
+
     private fun filterBookings(tabPosition: Int) {
         val filteredList = when (tabPosition) {
             0 -> allBookings.filter { it.status?.uppercase() != "CANCELLED" && it.status?.uppercase() != "COMPLETED" }
@@ -110,13 +113,13 @@ class TripsFragment : Fragment() {
             2 -> allBookings.filter { it.status?.uppercase() == "CANCELLED" } // Đã hủy
             else -> allBookings
         }
-        
+
         tripsAdapter.updateData(filteredList)
-        
+
         if (filteredList.isEmpty()) {
             binding.emptyView.visibility = View.VISIBLE
             binding.hotelsRecyclerView.visibility = View.GONE
-            
+
             val message = when (tabPosition) {
                 0 -> "Quý khách không có đặt chỗ sắp tới nào"
                 1 -> "Quý khách chưa hoàn tất chuyến đi nào"
@@ -129,7 +132,7 @@ class TripsFragment : Fragment() {
             binding.hotelsRecyclerView.visibility = View.VISIBLE
         }
     }
-    
+
     private fun showCancelConfirmation(booking: BookingResponse) {
         AlertDialog.Builder(requireContext())
             .setTitle("Hủy đặt phòng")
@@ -140,16 +143,20 @@ class TripsFragment : Fragment() {
             .setNegativeButton("Không", null)
             .show()
     }
-    
-    private fun cancelBooking(booking: BookingResponse) {
+
+    private fun cancelBooking(booking: BookingResponse, isAuto: Boolean = false) {
         val prefs = requireContext().getSharedPreferences("BTL_PREFS", Context.MODE_PRIVATE)
         val token = prefs.getString("ACCESS_TOKEN", "") ?: ""
         val bookingId = booking.bookingId
-        
+
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val response = ApiClient.bookingService.cancelBooking("Bearer $token", bookingId)
-                Toast.makeText(requireContext(), response.message, Toast.LENGTH_SHORT).show()
+                if (isAuto) {
+                    Toast.makeText(requireContext(), "Đơn #${booking.bookingId} đã tự động hủy do hết hạn", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(requireContext(), response.message, Toast.LENGTH_SHORT).show()
+                }
                 loadMyBookings()
             } catch (e: Exception) {
                 // Dù có lỗi, vẫn reload lại danh sách booking vì có thể backend đã xử lý thành công rồi
@@ -159,7 +166,7 @@ class TripsFragment : Fragment() {
             }
         }
     }
-    
+
     private fun processPayment(booking: BookingResponse) {
         val prefs = requireContext().getSharedPreferences("BTL_PREFS", Context.MODE_PRIVATE)
         val token = prefs.getString("ACCESS_TOKEN", "") ?: ""
@@ -181,7 +188,7 @@ class TripsFragment : Fragment() {
                 // Step 2: Confirm Payment
                 Toast.makeText(requireContext(), "Đang xác nhận thanh toán...", Toast.LENGTH_SHORT).show()
                 val confirmResponse = ApiClient.paymentService.confirmPayment("Bearer $token", createResponse.paymentId)
-                
+
                 // Success
                 Toast.makeText(requireContext(), confirmResponse.message, Toast.LENGTH_LONG).show()
 

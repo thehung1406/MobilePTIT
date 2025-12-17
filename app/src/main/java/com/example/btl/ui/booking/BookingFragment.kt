@@ -17,6 +17,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.btl.R
+import com.example.btl.api.HotelNameCache
 import com.example.btl.databinding.FragmentBookingBinding
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
@@ -199,6 +200,12 @@ class BookingFragment : Fragment() {
         if (token.isEmpty()) {
             Toast.makeText(requireContext(), "Lỗi xác thực. Vui lòng đăng nhập lại.", Toast.LENGTH_LONG).show()
             return
+        }
+        
+        // ** Cache the hotel name before creating the booking **
+        val hotelName = binding.propertyName?.text?.toString()
+        if (!hotelName.isNullOrEmpty()) {
+            HotelNameCache.saveHotelNameForRooms(requireContext(), validSelectedRoomIds, hotelName)
         }
 
         viewModel.createBooking(
